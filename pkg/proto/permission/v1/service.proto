@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nortoo.usms.permission.v1;
+
+option go_package = "github.com/nortoo/usms/pkg/proto/permission/v1;v1";
+
+import "google/protobuf/empty.proto";
+import "pkg/proto/permission/v1/message.proto";
+
+// APIs of operating permissions.
+service Service {
+  rpc Create(CreateReq) returns (Permission);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
+  rpc Update(UpdateReq) returns (Permission);
+  rpc Get(GetReq) returns (Permission);
+  rpc List(ListReq) returns (ListResp);
+}

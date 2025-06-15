@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nortoo.usms.menu.v1;
+
+import "google/protobuf/empty.proto";
+import "pkg/proto/menu/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/menu/v1;v1";
+
+service Service {
+  // APIs of operating menus.
+  rpc Create(CreateReq) returns (Menu);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
+  rpc Update(UpdateReq) returns (Menu);
+  rpc Get(GetReq) returns (Menu);
+  rpc List(ListReq) returns (ListResp);
+}

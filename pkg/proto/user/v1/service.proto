@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nortoo.usms.user.v1;
+
+import "google/protobuf/empty.proto";
+import "pkg/proto/user/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/user/v1;v1";
+
+// APIs of operating users.
+service Service {
+  rpc Create(CreateReq) returns (User);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
+  rpc Update(UpdateReq) returns (User);
+  rpc Get(GetReq) returns (User);
+  rpc List(ListReq) returns (ListResp);
+}

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package nortoo.usms.usergroup.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/usergroup/v1;v1";
+
+message Group {
+  uint64 id = 1;
+  string name = 2;
+  string comment = 3;
+  common.v1.types.TimeModel time = 4;
+}
+
+message CreateReq {
+  string name = 1;
+  string comment = 2;
+}
+
+message DeleteReq {
+  uint64 id = 1;
+}
+
+message UpdateReq {
+  uint64 id = 1;
+  string name = 2;
+  string comment = 3;
+}
+
+message GetReq {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message ListReq {
+  common.v1.types.Pagination pagination = 1;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated Group items = 2;
+}
+

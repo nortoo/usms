@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nortoo.usms.role.v1;
+
+import "google/protobuf/empty.proto";
+import "pkg/proto/role/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/role/v1;v1";
+
+service Service {
+  // APIs of operating roles.
+  rpc Create(CreateReq) returns (Role);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
+  rpc Update(UpdateReq) returns (Role);
+  rpc Get(GetReq) returns (Role);
+  rpc List(ListReq) returns (ListResp);
+}

@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package nortoo.usms.user.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+import "pkg/proto/role/v1/message.proto";
+import "pkg/proto/usergroup/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/user/v1;v1";
+
+message User {
+  uint64 id = 1;
+  string username = 2;
+  string email = 3;
+  string mobile = 4;
+  repeated role.v1.Role roles = 5;
+  repeated usergroup.v1.Group groups = 6;
+  int32 state = 7;
+  common.v1.types.TimeModel time = 8;
+}
+
+message CreateReq {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+  string mobile = 4;
+  repeated int64 roles = 5;
+  repeated int64 groups = 6;
+  int32 state = 7;
+}
+
+message DeleteReq {
+  uint64 id = 1;
+}
+
+message UpdateReq {
+  uint64 id = 1;
+  string password = 2;
+  string email = 3;
+  string mobile = 4;
+  repeated int64 roles = 5;
+  repeated int64 groups = 6;
+  int32 state = 7;
+}
+
+message GetReq {
+  uint64 id = 1;
+}
+
+message ListReq {
+  string username = 1;
+  string email = 2;
+  string mobile = 3;
+  repeated int32 state = 4;
+  uint64 group_id = 5;
+  uint64 role_id = 6;
+  common.v1.types.Pagination pagination = 7;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated User items = 2;
+}

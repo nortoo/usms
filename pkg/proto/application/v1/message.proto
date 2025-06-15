@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package nortoo.usms.application.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/application/v1;v1";
+
+// Application defines the data model of an application.
+message Application {
+  uint64 id = 1;
+
+  // Name of the application.
+  string name = 2;
+
+  // Appid of the application.
+  string appid = 3;
+
+  // Secretkey of the application.
+  string secret_key = 4;
+  string comment = 5;
+  
+  int32 state = 6;
+  common.v1.types.TimeModel time = 7;
+}
+
+// CreateReq is the request model of creating an new Application.
+message CreateReq {
+  string name = 1;
+  string comment = 2;
+}
+
+// DeleteReq is the parameter to delete an application.
+message DeleteReq {
+  uint64 id = 1;
+}
+
+// UpdateReq is the parameter to update an application.
+message UpdateReq {
+  uint64 id = 1;
+  string comment = 2;
+  int32 state = 3;
+}
+
+// GetReq is the parameters to get an application.
+message GetReq {
+  uint64 id = 1;
+  string name = 2;
+  string appid = 3;
+}
+
+// ListReq is the parameter to list applications.
+message ListReq {
+  common.v1.types.Pagination pagination = 1;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated Application items = 2;
+}
+
+
+
+
+

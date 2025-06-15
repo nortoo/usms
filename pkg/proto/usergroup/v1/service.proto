@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nortoo.usms.usergroup.v1;
+
+import "google/protobuf/empty.proto";
+import "pkg/proto/usergroup/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/usergroup/v1;v1";
+
+// APIs of operating groups.
+service Service {
+  rpc Create(CreateReq) returns (Group);
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty);
+  rpc Update(UpdateReq) returns (Group);
+  rpc Get(GetReq) returns (Group);
+  rpc List(ListReq) returns (ListResp);
+}

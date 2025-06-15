@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package nortoo.usms.menu.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/menu/v1;v1";
+
+message Menu {
+  uint64 id = 1;
+  uint64 parent_id = 2;
+  string name = 3;
+  string path = 4;
+  string comment = 5;
+  common.v1.types.TimeModel time = 6;
+}
+
+message CreateReq {
+  uint64 parent_id = 1;
+  string name = 2;
+  string path = 3;
+  string comment = 4;
+}
+
+message DeleteReq {
+  uint64 id = 1;
+}
+
+message UpdateReq {
+  uint64 id = 1;
+  string name = 2;
+  string path = 3;
+  string comment = 4;
+}
+
+message GetReq {
+  uint64 id = 1;
+}
+
+message ListReq {
+  common.v1.types.Pagination pagination = 1;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated Menu items = 2;
+}
+
+

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package nortoo.usms.role.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+import "pkg/proto/menu/v1/message.proto";
+import "pkg/proto/permission/v1/message.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/role/v1;v1";
+
+message Role {
+  uint64 id = 1;
+  string name = 2;
+  string comment = 3;
+  string application = 4;
+  repeated menu.v1.Menu menus = 5;
+  repeated permission.v1.Permission permissions = 6;
+  common.v1.types.TimeModel time = 7;
+}
+
+message CreateReq {
+  string name = 1;
+  string comment = 2;
+  uint64 application_id = 3;
+  repeated uint64 menus = 4;
+  repeated uint64 permissions = 5;
+}
+
+message DeleteReq {
+  uint64 id = 1;
+}
+
+message UpdateReq {
+  uint64 id = 1;
+  string comment = 2;
+  repeated uint64 menus = 3;
+  repeated uint64 permissions = 4;
+}
+
+message GetReq {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message ListReq {
+  common.v1.types.Pagination pagination = 1;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated Role items = 2;
+}

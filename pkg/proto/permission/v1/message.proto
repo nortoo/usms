@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package nortoo.usms.permission.v1;
+
+import "pkg/proto/common/v1/types/shared.proto";
+
+option go_package = "github.com/nortoo/usms/pkg/proto/permission/v1;v1";
+
+message Permission {
+  uint64 id = 1;
+  string action = 2;
+  string resource = 3;
+  string comment = 4;
+  common.v1.types.TimeModel time = 5;
+}
+
+message CreateReq {
+  string action = 1;
+  string resource = 2;
+  string comment = 3;
+}
+
+message DeleteReq {
+  uint64 id = 1;
+}
+
+message UpdateReq {
+  uint64 id = 1;
+  string comment = 2;
+}
+
+message GetReq {
+  uint64 id = 1;
+}
+
+message ListReq {
+  common.v1.types.Pagination pagination = 1;
+}
+
+message ListResp {
+  common.v1.types.PaginationResp pagination = 1;
+  repeated Permission items = 2;
+}

@@ -1,0 +1,16 @@
+app:
+  snowflake_id: 64
+  certs:
+    ca_file: conf/certs/ca/ca.pem
+    key_file: conf/certs/server/server.key
+    cert_file: conf/certs/server/server.crt
+store:
+  mysql:
+    default:
+      host:
+      port:
+      user:
+      password:
+      db:
+
+  redis:
