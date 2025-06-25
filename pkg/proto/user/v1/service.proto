@@ -14,4 +14,8 @@ service Service {
   rpc Update(UpdateReq) returns (User);
   rpc Get(GetReq) returns (User);
   rpc List(ListReq) returns (ListResp);
+
+  rpc Signup(SignupReq) returns (google.protobuf.Empty);
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc Auth(AuthReq) returns (AuthResp);
 }

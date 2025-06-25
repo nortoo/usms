@@ -61,3 +61,38 @@ message ListResp {
   common.v1.types.PaginationResp pagination = 1;
   repeated User items = 2;
 }
+
+message SignupReq {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+  string mobile = 4;
+  repeated uint64 roles =5;
+  repeated uint64 groups = 6;
+}
+
+message LoginReq {
+  // identifier can be either email or mobile
+  string identifier = 1;
+  string password = 2;
+}
+
+message LoginResp {
+  User user = 1;
+  string token = 2;
+  string refresh_token = 3;
+  string token_type = 4;
+  uint32 expires_in = 5;
+}
+
+message AuthReq {
+  string token = 1;
+  string tenant = 2;
+  string resource = 3;
+  string action = 4;
+}
+
+message AuthResp {
+  uint64 uid = 1;
+  bool authorized = 2;
+}

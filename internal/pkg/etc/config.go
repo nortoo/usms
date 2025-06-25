@@ -13,9 +13,28 @@ type (
 		CertFile string `yaml:"cert_file"`
 	}
 
+	Settings struct {
+		// UsernamePattern defines the verification pattern of a valid username.
+		// It must be a valid regular expression.
+		UsernamePattern string `yaml:"username_pattern"`
+
+		// PasswordPattern defines the verification pattern of a valid password.
+		// It must be a valid regular expression.
+		PasswordPattern string `yaml:"password_pattern"`
+
+		JWT struct {
+			// TokenExpireTime defines the expiration time of a token in seconds.
+			TokenExpireTime int `yaml:"token_expire_time"`
+
+			// TokenRefreshTime defines the refresh time of a token in seconds.
+			TokenRefreshTime int `yaml:"token_refresh_time"`
+		} `yaml:"jwt"`
+	}
+
 	App struct {
-		SnowflakeID int64  `yaml:"snowflake_id"`
-		Certs       *Certs `yaml:"certs"`
+		SnowflakeID int64     `yaml:"snowflake_id"`
+		Certs       *Certs    `yaml:"certs"`
+		Settings    *Settings `yaml:"settings"`
 	}
 	MySQL struct {
 		Host     string `yaml:"host"`

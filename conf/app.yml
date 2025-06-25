@@ -4,13 +4,19 @@ app:
     ca_file: conf/certs/ca/ca.pem
     key_file: conf/certs/server/server.key
     cert_file: conf/certs/server/server.crt
+  jwt:
+    token_expire_time: 3600  # in seconds
+    token_refresh_time: 7200  # in seconds
 store:
   mysql:
     default:
-      host:
-      port:
-      user:
-      password:
-      db:
+      host: 127.0.0.1
+      port: 3306
+      user: root
+      password: placeholder
+      db: dbname
 
   redis:
+    host: 123.0.0.1
+    port: 6379
+    password: placeholder

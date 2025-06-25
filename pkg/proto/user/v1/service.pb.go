@@ -25,13 +25,16 @@ var File_pkg_proto_user_v1_service_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_user_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1fpkg/proto/user/v1/service.proto\x12\x13nortoo.usms.user.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fpkg/proto/user/v1/message.proto2\xd9\x02\n" +
+	"\x1fpkg/proto/user/v1/service.proto\x12\x13nortoo.usms.user.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fpkg/proto/user/v1/message.proto2\xa8\x04\n" +
 	"\aService\x12C\n" +
 	"\x06Create\x12\x1e.nortoo.usms.user.v1.CreateReq\x1a\x19.nortoo.usms.user.v1.User\x12@\n" +
 	"\x06Delete\x12\x1e.nortoo.usms.user.v1.DeleteReq\x1a\x16.google.protobuf.Empty\x12C\n" +
 	"\x06Update\x12\x1e.nortoo.usms.user.v1.UpdateReq\x1a\x19.nortoo.usms.user.v1.User\x12=\n" +
 	"\x03Get\x12\x1b.nortoo.usms.user.v1.GetReq\x1a\x19.nortoo.usms.user.v1.User\x12C\n" +
-	"\x04List\x12\x1c.nortoo.usms.user.v1.ListReq\x1a\x1d.nortoo.usms.user.v1.ListRespB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
+	"\x04List\x12\x1c.nortoo.usms.user.v1.ListReq\x1a\x1d.nortoo.usms.user.v1.ListResp\x12@\n" +
+	"\x06Signup\x12\x1e.nortoo.usms.user.v1.SignupReq\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\x05Login\x12\x1d.nortoo.usms.user.v1.LoginReq\x1a\x1e.nortoo.usms.user.v1.LoginResp\x12C\n" +
+	"\x04Auth\x12\x1c.nortoo.usms.user.v1.AuthReq\x1a\x1d.nortoo.usms.user.v1.AuthRespB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
 
 var file_pkg_proto_user_v1_service_proto_goTypes = []any{
 	(*CreateReq)(nil),     // 0: nortoo.usms.user.v1.CreateReq
@@ -39,26 +42,37 @@ var file_pkg_proto_user_v1_service_proto_goTypes = []any{
 	(*UpdateReq)(nil),     // 2: nortoo.usms.user.v1.UpdateReq
 	(*GetReq)(nil),        // 3: nortoo.usms.user.v1.GetReq
 	(*ListReq)(nil),       // 4: nortoo.usms.user.v1.ListReq
-	(*User)(nil),          // 5: nortoo.usms.user.v1.User
-	(*emptypb.Empty)(nil), // 6: google.protobuf.Empty
-	(*ListResp)(nil),      // 7: nortoo.usms.user.v1.ListResp
+	(*SignupReq)(nil),     // 5: nortoo.usms.user.v1.SignupReq
+	(*LoginReq)(nil),      // 6: nortoo.usms.user.v1.LoginReq
+	(*AuthReq)(nil),       // 7: nortoo.usms.user.v1.AuthReq
+	(*User)(nil),          // 8: nortoo.usms.user.v1.User
+	(*emptypb.Empty)(nil), // 9: google.protobuf.Empty
+	(*ListResp)(nil),      // 10: nortoo.usms.user.v1.ListResp
+	(*LoginResp)(nil),     // 11: nortoo.usms.user.v1.LoginResp
+	(*AuthResp)(nil),      // 12: nortoo.usms.user.v1.AuthResp
 }
 var file_pkg_proto_user_v1_service_proto_depIdxs = []int32{
-	0, // 0: nortoo.usms.user.v1.Service.Create:input_type -> nortoo.usms.user.v1.CreateReq
-	1, // 1: nortoo.usms.user.v1.Service.Delete:input_type -> nortoo.usms.user.v1.DeleteReq
-	2, // 2: nortoo.usms.user.v1.Service.Update:input_type -> nortoo.usms.user.v1.UpdateReq
-	3, // 3: nortoo.usms.user.v1.Service.Get:input_type -> nortoo.usms.user.v1.GetReq
-	4, // 4: nortoo.usms.user.v1.Service.List:input_type -> nortoo.usms.user.v1.ListReq
-	5, // 5: nortoo.usms.user.v1.Service.Create:output_type -> nortoo.usms.user.v1.User
-	6, // 6: nortoo.usms.user.v1.Service.Delete:output_type -> google.protobuf.Empty
-	5, // 7: nortoo.usms.user.v1.Service.Update:output_type -> nortoo.usms.user.v1.User
-	5, // 8: nortoo.usms.user.v1.Service.Get:output_type -> nortoo.usms.user.v1.User
-	7, // 9: nortoo.usms.user.v1.Service.List:output_type -> nortoo.usms.user.v1.ListResp
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: nortoo.usms.user.v1.Service.Create:input_type -> nortoo.usms.user.v1.CreateReq
+	1,  // 1: nortoo.usms.user.v1.Service.Delete:input_type -> nortoo.usms.user.v1.DeleteReq
+	2,  // 2: nortoo.usms.user.v1.Service.Update:input_type -> nortoo.usms.user.v1.UpdateReq
+	3,  // 3: nortoo.usms.user.v1.Service.Get:input_type -> nortoo.usms.user.v1.GetReq
+	4,  // 4: nortoo.usms.user.v1.Service.List:input_type -> nortoo.usms.user.v1.ListReq
+	5,  // 5: nortoo.usms.user.v1.Service.Signup:input_type -> nortoo.usms.user.v1.SignupReq
+	6,  // 6: nortoo.usms.user.v1.Service.Login:input_type -> nortoo.usms.user.v1.LoginReq
+	7,  // 7: nortoo.usms.user.v1.Service.Auth:input_type -> nortoo.usms.user.v1.AuthReq
+	8,  // 8: nortoo.usms.user.v1.Service.Create:output_type -> nortoo.usms.user.v1.User
+	9,  // 9: nortoo.usms.user.v1.Service.Delete:output_type -> google.protobuf.Empty
+	8,  // 10: nortoo.usms.user.v1.Service.Update:output_type -> nortoo.usms.user.v1.User
+	8,  // 11: nortoo.usms.user.v1.Service.Get:output_type -> nortoo.usms.user.v1.User
+	10, // 12: nortoo.usms.user.v1.Service.List:output_type -> nortoo.usms.user.v1.ListResp
+	9,  // 13: nortoo.usms.user.v1.Service.Signup:output_type -> google.protobuf.Empty
+	11, // 14: nortoo.usms.user.v1.Service.Login:output_type -> nortoo.usms.user.v1.LoginResp
+	12, // 15: nortoo.usms.user.v1.Service.Auth:output_type -> nortoo.usms.user.v1.AuthResp
+	8,  // [8:16] is the sub-list for method output_type
+	0,  // [0:8] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_user_v1_service_proto_init() }

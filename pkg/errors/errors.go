@@ -29,6 +29,8 @@ var (
 	ErrLoginDeclined    = newUSMSError(codes.Unauthenticated, "username or password is incorrect")
 	ErrUnauthenticated  = newUSMSError(codes.Unauthenticated, "user is not authenticated")
 	ErrPermissionDenied = newUSMSError(codes.PermissionDenied, "permission denied")
+	ErrUserExists       = newUSMSError(codes.AlreadyExists, "user already exists")
 
 	ErrResourceNotFound = newUSMSError(codes.NotFound, "resource does not exist")
+	ErrInternalError    = newUSMSError(codes.Internal, "unknown error occurred")
 )

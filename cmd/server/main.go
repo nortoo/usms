@@ -22,6 +22,10 @@ func main() {
 		log.GetLogger().Fatal("Failed to load config file", zap.Error(err))
 		os.Exit(1)
 	}
+	if err = etc.LoadEnv(); err != nil {
+		log.GetLogger().Fatal("Failed to load environment variables", zap.Error(err))
+		os.Exit(1)
+	}
 	if err = snowflake.Init(etc.GetConfig().App.SnowflakeID); err != nil {
 		log.GetLogger().Fatal("Failed to init snowflake", zap.Error(err))
 		os.Exit(1)

@@ -25,6 +25,9 @@ const (
 	Service_Update_FullMethodName = "/nortoo.usms.user.v1.Service/Update"
 	Service_Get_FullMethodName    = "/nortoo.usms.user.v1.Service/Get"
 	Service_List_FullMethodName   = "/nortoo.usms.user.v1.Service/List"
+	Service_Signup_FullMethodName = "/nortoo.usms.user.v1.Service/Signup"
+	Service_Login_FullMethodName  = "/nortoo.usms.user.v1.Service/Login"
+	Service_Auth_FullMethodName   = "/nortoo.usms.user.v1.Service/Auth"
 )
 
 // ServiceClient is the client API for Service service.
@@ -38,6 +41,9 @@ type ServiceClient interface {
 	Update(ctx context.Context, in *UpdateReq, opts ...grpc.CallOption) (*User, error)
 	Get(ctx context.Context, in *GetReq, opts ...grpc.CallOption) (*User, error)
 	List(ctx context.Context, in *ListReq, opts ...grpc.CallOption) (*ListResp, error)
+	Signup(ctx context.Context, in *SignupReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
+	Auth(ctx context.Context, in *AuthReq, opts ...grpc.CallOption) (*AuthResp, error)
 }
 
 type serviceClient struct {
@@ -98,6 +104,36 @@ func (c *serviceClient) List(ctx context.Context, in *ListReq, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *serviceClient) Signup(ctx context.Context, in *SignupReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Service_Signup_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LoginResp)
+	err := c.cc.Invoke(ctx, Service_Login_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) Auth(ctx context.Context, in *AuthReq, opts ...grpc.CallOption) (*AuthResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthResp)
+	err := c.cc.Invoke(ctx, Service_Auth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility.
@@ -109,6 +145,9 @@ type ServiceServer interface {
 	Update(context.Context, *UpdateReq) (*User, error)
 	Get(context.Context, *GetReq) (*User, error)
 	List(context.Context, *ListReq) (*ListResp, error)
+	Signup(context.Context, *SignupReq) (*emptypb.Empty, error)
+	Login(context.Context, *LoginReq) (*LoginResp, error)
+	Auth(context.Context, *AuthReq) (*AuthResp, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -133,6 +172,15 @@ func (UnimplementedServiceServer) Get(context.Context, *GetReq) (*User, error) {
 }
 func (UnimplementedServiceServer) List(context.Context, *ListReq) (*ListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedServiceServer) Signup(context.Context, *SignupReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Signup not implemented")
+}
+func (UnimplementedServiceServer) Login(context.Context, *LoginReq) (*LoginResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedServiceServer) Auth(context.Context, *AuthReq) (*AuthResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 func (UnimplementedServiceServer) testEmbeddedByValue()                 {}
@@ -245,6 +293,60 @@ func _Service_List_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_Signup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).Signup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_Signup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).Signup(ctx, req.(*SignupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).Login(ctx, req.(*LoginReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).Auth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_Auth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).Auth(ctx, req.(*AuthReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -271,6 +373,18 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "List",
 			Handler:    _Service_List_Handler,
+		},
+		{
+			MethodName: "Signup",
+			Handler:    _Service_Signup_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _Service_Login_Handler,
+		},
+		{
+			MethodName: "Auth",
+			Handler:    _Service_Auth_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

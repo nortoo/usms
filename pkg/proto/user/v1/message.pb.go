@@ -540,6 +540,339 @@ func (x *ListResp) GetItems() []*User {
 	return nil
 }
 
+type SignupReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Mobile        string                 `protobuf:"bytes,4,opt,name=mobile,proto3" json:"mobile,omitempty"`
+	Roles         []uint64               `protobuf:"varint,5,rep,packed,name=roles,proto3" json:"roles,omitempty"`
+	Groups        []uint64               `protobuf:"varint,6,rep,packed,name=groups,proto3" json:"groups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignupReq) Reset() {
+	*x = SignupReq{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignupReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignupReq) ProtoMessage() {}
+
+func (x *SignupReq) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignupReq.ProtoReflect.Descriptor instead.
+func (*SignupReq) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SignupReq) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *SignupReq) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *SignupReq) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *SignupReq) GetMobile() string {
+	if x != nil {
+		return x.Mobile
+	}
+	return ""
+}
+
+func (x *SignupReq) GetRoles() []uint64 {
+	if x != nil {
+		return x.Roles
+	}
+	return nil
+}
+
+func (x *SignupReq) GetGroups() []uint64 {
+	if x != nil {
+		return x.Groups
+	}
+	return nil
+}
+
+type LoginReq struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// identifier can be either email or mobile
+	Identifier    string `protobuf:"bytes,1,opt,name=identifier,proto3" json:"identifier,omitempty"`
+	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginReq) Reset() {
+	*x = LoginReq{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginReq) ProtoMessage() {}
+
+func (x *LoginReq) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginReq.ProtoReflect.Descriptor instead.
+func (*LoginReq) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LoginReq) GetIdentifier() string {
+	if x != nil {
+		return x.Identifier
+	}
+	return ""
+}
+
+func (x *LoginReq) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type LoginResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	TokenType     string                 `protobuf:"bytes,4,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`
+	ExpiresIn     uint32                 `protobuf:"varint,5,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginResp) Reset() {
+	*x = LoginResp{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginResp) ProtoMessage() {}
+
+func (x *LoginResp) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginResp.ProtoReflect.Descriptor instead.
+func (*LoginResp) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LoginResp) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *LoginResp) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *LoginResp) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *LoginResp) GetTokenType() string {
+	if x != nil {
+		return x.TokenType
+	}
+	return ""
+}
+
+func (x *LoginResp) GetExpiresIn() uint32 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
+type AuthReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	Tenant        string                 `protobuf:"bytes,2,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Resource      string                 `protobuf:"bytes,3,opt,name=resource,proto3" json:"resource,omitempty"`
+	Action        string                 `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthReq) Reset() {
+	*x = AuthReq{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthReq) ProtoMessage() {}
+
+func (x *AuthReq) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthReq.ProtoReflect.Descriptor instead.
+func (*AuthReq) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AuthReq) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *AuthReq) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *AuthReq) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *AuthReq) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+type AuthResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           uint64                 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Authorized    bool                   `protobuf:"varint,2,opt,name=authorized,proto3" json:"authorized,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthResp) Reset() {
+	*x = AuthResp{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthResp) ProtoMessage() {}
+
+func (x *AuthResp) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthResp.ProtoReflect.Descriptor instead.
+func (*AuthResp) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AuthResp) GetUid() uint64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *AuthResp) GetAuthorized() bool {
+	if x != nil {
+		return x.Authorized
+	}
+	return false
+}
+
 var File_pkg_proto_user_v1_message_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
@@ -588,7 +921,37 @@ const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
 	"\n" +
 	"pagination\x18\x01 \x01(\v2+.nortoo.usms.common.v1.types.PaginationRespR\n" +
 	"pagination\x12/\n" +
-	"\x05items\x18\x02 \x03(\v2\x19.nortoo.usms.user.v1.UserR\x05itemsB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
+	"\x05items\x18\x02 \x03(\v2\x19.nortoo.usms.user.v1.UserR\x05items\"\x9f\x01\n" +
+	"\tSignupReq\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x14\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12\x16\n" +
+	"\x06mobile\x18\x04 \x01(\tR\x06mobile\x12\x14\n" +
+	"\x05roles\x18\x05 \x03(\x04R\x05roles\x12\x16\n" +
+	"\x06groups\x18\x06 \x03(\x04R\x06groups\"F\n" +
+	"\bLoginReq\x12\x1e\n" +
+	"\n" +
+	"identifier\x18\x01 \x01(\tR\n" +
+	"identifier\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\xb3\x01\n" +
+	"\tLoginResp\x12-\n" +
+	"\x04user\x18\x01 \x01(\v2\x19.nortoo.usms.user.v1.UserR\x04user\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\x12#\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12\x1d\n" +
+	"\n" +
+	"token_type\x18\x04 \x01(\tR\ttokenType\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x05 \x01(\rR\texpiresIn\"k\n" +
+	"\aAuthReq\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x16\n" +
+	"\x06tenant\x18\x02 \x01(\tR\x06tenant\x12\x1a\n" +
+	"\bresource\x18\x03 \x01(\tR\bresource\x12\x16\n" +
+	"\x06action\x18\x04 \x01(\tR\x06action\"<\n" +
+	"\bAuthResp\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x04R\x03uid\x12\x1e\n" +
+	"\n" +
+	"authorized\x18\x02 \x01(\bR\n" +
+	"authorizedB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
 
 var (
 	file_pkg_proto_user_v1_message_proto_rawDescOnce sync.Once
@@ -602,7 +965,7 @@ func file_pkg_proto_user_v1_message_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_user_v1_message_proto_rawDescData
 }
 
-var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_pkg_proto_user_v1_message_proto_goTypes = []any{
 	(*User)(nil),                 // 0: nortoo.usms.user.v1.User
 	(*CreateReq)(nil),            // 1: nortoo.usms.user.v1.CreateReq
@@ -611,24 +974,30 @@ var file_pkg_proto_user_v1_message_proto_goTypes = []any{
 	(*GetReq)(nil),               // 4: nortoo.usms.user.v1.GetReq
 	(*ListReq)(nil),              // 5: nortoo.usms.user.v1.ListReq
 	(*ListResp)(nil),             // 6: nortoo.usms.user.v1.ListResp
-	(*v1.Role)(nil),              // 7: nortoo.usms.role.v1.Role
-	(*v11.Group)(nil),            // 8: nortoo.usms.usergroup.v1.Group
-	(*types.TimeModel)(nil),      // 9: nortoo.usms.common.v1.types.TimeModel
-	(*types.Pagination)(nil),     // 10: nortoo.usms.common.v1.types.Pagination
-	(*types.PaginationResp)(nil), // 11: nortoo.usms.common.v1.types.PaginationResp
+	(*SignupReq)(nil),            // 7: nortoo.usms.user.v1.SignupReq
+	(*LoginReq)(nil),             // 8: nortoo.usms.user.v1.LoginReq
+	(*LoginResp)(nil),            // 9: nortoo.usms.user.v1.LoginResp
+	(*AuthReq)(nil),              // 10: nortoo.usms.user.v1.AuthReq
+	(*AuthResp)(nil),             // 11: nortoo.usms.user.v1.AuthResp
+	(*v1.Role)(nil),              // 12: nortoo.usms.role.v1.Role
+	(*v11.Group)(nil),            // 13: nortoo.usms.usergroup.v1.Group
+	(*types.TimeModel)(nil),      // 14: nortoo.usms.common.v1.types.TimeModel
+	(*types.Pagination)(nil),     // 15: nortoo.usms.common.v1.types.Pagination
+	(*types.PaginationResp)(nil), // 16: nortoo.usms.common.v1.types.PaginationResp
 }
 var file_pkg_proto_user_v1_message_proto_depIdxs = []int32{
-	7,  // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
-	8,  // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
-	9,  // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
-	10, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
-	11, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
+	12, // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
+	13, // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
+	14, // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
+	15, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
+	16, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
 	0,  // 5: nortoo.usms.user.v1.ListResp.items:type_name -> nortoo.usms.user.v1.User
-	6,  // [6:6] is the sub-list for method output_type
-	6,  // [6:6] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	0,  // 6: nortoo.usms.user.v1.LoginResp.user:type_name -> nortoo.usms.user.v1.User
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_user_v1_message_proto_init() }
@@ -642,7 +1011,7 @@ func file_pkg_proto_user_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_user_v1_message_proto_rawDesc), len(file_pkg_proto_user_v1_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

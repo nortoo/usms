@@ -5,11 +5,20 @@ import (
 
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
+	"github.com/nortoo/usms/internal/pkg/etc"
+	"github.com/nortoo/usms/internal/pkg/jwt"
+	"github.com/nortoo/usms/internal/pkg/log"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
 	"github.com/nortoo/usms/internal/pkg/types/user"
 	_usm "github.com/nortoo/usms/internal/pkg/usm"
+	_validation "github.com/nortoo/usms/internal/pkg/validation"
+	"github.com/nortoo/usms/pkg/errors"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/user/v1"
+	"github.com/nortoo/utils-go/validation"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
@@ -143,4 +152,214 @@ func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
 		},
 		Items: items,
 	}, nil
+}
+
+func Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
+	if !_validation.IsValidUsername(req.GetUsername()) {
+		return nil, errors.ErrInvalidParams.WithDetail("invalid username")
+	}
+	if !_validation.IsValidPassword(req.GetPassword()) {
+		return nil, errors.ErrInvalidParams.WithDetail("invalid password")
+	}
+
+	usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
+	if err != nil {
+		return nil, err
+	}
+	if usernameExists {
+		return nil, errors.ErrUserExists.WithDetail("username already exists")
+	}
+	if req.GetEmail() != "" {
+		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
+		if err != nil {
+			return nil, err
+		}
+		if emailExists {
+			return nil, errors.ErrUserExists.WithDetail("email already exists")
+		}
+	}
+	if req.GetMobile() != "" {
+		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
+		if err != nil {
+			return nil, err
+		}
+		if mobileExists {
+			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
+		}
+	}
+	password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+
+	u := &model.User{
+		Model:    gorm.Model{ID: uint(snowflake.GetSnowWorker().NextId())},
+		Username: req.GetUsername(),
+		Password: string(password),
+		//State:    int8(req.GetState()),
+	}
+
+	var roles []*model.Role
+	if len(req.GetRoles()) != 0 {
+		for _, rid := range req.GetRoles() {
+			role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
+			if err != nil {
+				log.GetLogger().Warn("tole doesn't exist", zap.Uint64("id", rid))
+				continue
+			}
+			roles = append(roles, role)
+		}
+	} else {
+		// assign default roles if no roles are provided.
+		roles, _, err = _usm.Client().ListRoles(&types.QueryRoleOptions{
+			IsDefault: []bool{true},
+			WithTotal: false,
+		})
+		if err != nil {
+			log.GetLogger().Warn("default role doesn't exist", zap.Error(err))
+		}
+	}
+	u.Roles = roles
+
+	var groups []*model.Group
+	if len(req.GetGroups()) != 0 {
+		for _, gid := range req.GetGroups() {
+			group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
+			if err != nil {
+				log.GetLogger().Warn("group doesn't exist", zap.Uint64("id", gid))
+				continue
+			}
+			groups = append(groups, group)
+		}
+	} else {
+		// assign default groups if no groups are provided.
+		groups, _, err = _usm.Client().ListGroups(&types.QueryGroupOptions{
+			IsDefault: []bool{true},
+			WithTotal: false,
+		})
+		if err != nil {
+			log.GetLogger().Warn("default group doesn't exist", zap.Error(err))
+		}
+	}
+	u.Groups = groups
+
+	err = _usm.Client().CreateUser(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// loginIdentifier represents the identity type for login including username, email, and mobile.
+type loginIdentifier string
+
+const (
+	identifierUsername loginIdentifier = "username"
+	identifierEmail    loginIdentifier = "email"
+	identifierMobile   loginIdentifier = "mobile"
+)
+
+func recognizeLoginIdentity(req *pb.LoginReq) loginIdentifier {
+	identifier := req.GetIdentifier()
+
+	if validation.IsValidEmail(identifier) {
+		return identifierEmail
+	} else if isValid, _ := validation.IsValidMobileNumber(identifier, "US"); isValid {
+		return identifierMobile
+	} else if _validation.IsValidUsername(identifier) {
+		return identifierUsername
+	} else {
+		return "unknown"
+	}
+}
+
+func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
+	var u *model.User
+	var err error
+
+	identifier := req.GetIdentifier()
+	switch recognizeLoginIdentity(req) {
+	case identifierEmail:
+		u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+	case identifierMobile:
+		u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+	case identifierUsername:
+		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+	default:
+		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
+	}
+	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
+	}
+	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.GetPassword())); err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
+	}
+
+	token, err := jwt.GenerateToken(u.ID, etc.GetEnv().JWTSecretKey, etc.GetConfig().App.Settings.JWT.TokenExpireTime)
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+
+	refreshToken, err := jwt.GenerateToken(
+		u.ID,
+		etc.GetEnv().JWTRefreshSecretKey,
+		etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+
+	return &pb.LoginResp{
+		User:         user.ModelToPb(u),
+		Token:        token,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+	}, nil
+}
+
+func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
+	claims, err := jwt.ParseToken(token, etc.GetEnv().JWTSecretKey)
+	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
+	}
+
+	userID := claims.UID
+	if userID <= 0 {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid user ID in token")
+	}
+
+	u, err := _usm.Client().GetUser(&model.User{
+		Model: gorm.Model{ID: uint(userID)},
+		Roles: []*model.Role{},
+	})
+	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("user not found")
+	}
+
+	return u, nil
+}
+
+func Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
+	u, err := getUserFromToken(ctx, req.GetToken())
+	if err != nil {
+		return nil, err
+	}
+	if u.Roles == nil {
+		return &pb.AuthResp{Authorized: false}, nil
+	}
+
+	for _, role := range u.Roles {
+		authorized, err := _usm.Client().Authorize(role.Name, req.GetTenant(), req.GetResource(), req.GetAction())
+		if err != nil {
+			log.GetLogger().Warn("authorize fail", zap.Error(err))
+			continue
+		}
+		if authorized {
+			return &pb.AuthResp{
+				Uid:        uint64(u.ID),
+				Authorized: true,
+			}, nil
+		}
+	}
+	return &pb.AuthResp{Authorized: false}, nil
 }
