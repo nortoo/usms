@@ -50,8 +50,15 @@ type (
 		Password string `yaml:"password"`
 		DB       string `yaml:"db"`
 	}
+
+	Redis struct {
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		Password string `yaml:"password"`
+	}
 	Store struct {
 		Mysql map[string]*MySQL `yaml:"mysql"`
+		Redis *Redis            `yaml:"redis"`
 	}
 	Config struct {
 		App   *App   `yaml:"app"`

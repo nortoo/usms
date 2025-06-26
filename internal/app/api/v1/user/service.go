@@ -155,7 +155,12 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 		if !_validation.IsValidPassword(req.GetPassword()) {
 			return nil, errors.ErrInvalidParams.WithDetail("invalid password")
 		}
-		u.Password = req.GetPassword()
+
+		password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, errors.ErrInternalError.WithDetail(err.Error())
+		}
+		u.Password = string(password)
 		cols = append(cols, "Password")
 	}
 	if req.GetState() != 0 {
