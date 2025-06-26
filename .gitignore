@@ -18,6 +18,7 @@
 .idea/
 conf/certs
 test/certs
+logs
 
 go.sum
 usms

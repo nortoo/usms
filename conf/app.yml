@@ -4,9 +4,16 @@ app:
     ca_file: conf/certs/ca/ca.pem
     key_file: conf/certs/server/server.key
     cert_file: conf/certs/server/server.crt
-  jwt:
-    token_expire_time: 3600  # in seconds
-    token_refresh_time: 7200  # in seconds
+  settings:
+    jwt:
+      token_expire_time: 3600  # in seconds
+      token_refresh_time: 2592000  # in seconds
+    username_pattern: '^[a-zA-Z0-9_]{3,20}$'  # 3-20 characters, alphanumeric and underscores
+    password_pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$' # At least 8 characters, one uppercase, one lowercase, and one digit
+    default_value:
+      user_state: 1
+
+
 store:
   mysql:
     default:
@@ -17,6 +24,6 @@ store:
       db: dbname
 
   redis:
-    host: 123.0.0.1
+    host: 127.0.0.1
     port: 6379
     password: placeholder

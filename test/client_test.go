@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	}
 
 	creds := credentials.NewTLS(&tls.Config{
-		ServerName:   "USMS-SERVER",
+		ServerName:   "USER-SVC-INIT",
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      certPool,
 	})

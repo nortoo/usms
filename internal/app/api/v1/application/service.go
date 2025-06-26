@@ -13,6 +13,7 @@ import (
 )
 
 func Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error) {
+	// Todo: verify if the application name already exists
 	app := &model.Application{
 		ID:        uint(snowflake.GetSnowWorker().NextId()),
 		Name:      req.GetName(),

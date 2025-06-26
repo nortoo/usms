@@ -14,10 +14,16 @@ import (
 
 func Create(ctx context.Context, req *pb.CreateReq) (*pb.Role, error) {
 	r := &model.Role{
-		ID:            uint(snowflake.GetSnowWorker().NextId()),
-		Name:          req.GetName(),
-		Comment:       req.GetComment(),
-		ApplicationID: uint(req.GetApplicationId()),
+		ID:      uint(snowflake.GetSnowWorker().NextId()),
+		Name:    req.GetName(),
+		Comment: req.GetComment(),
+	}
+	if req.ApplicationId != 0 {
+		app, err := _usm.Client().GetApplication(&model.Application{ID: uint(req.GetApplicationId())})
+		if err != nil {
+			return nil, err
+		}
+		r.Application = app
 	}
 	for _, mid := range req.GetMenus() {
 		m, err := _usm.Client().GetMenu(&model.Menu{ID: uint(mid)})
