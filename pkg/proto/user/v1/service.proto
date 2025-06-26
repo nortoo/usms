@@ -18,4 +18,5 @@ service Service {
   rpc Signup(SignupReq) returns (google.protobuf.Empty);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Auth(AuthReq) returns (AuthResp);
+  rpc DoesIdentifierExist(DoesIdentifierExistReq) returns (DoesIdentifierExistResp);
 }

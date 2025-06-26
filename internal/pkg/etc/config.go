@@ -22,6 +22,7 @@ type (
 		// It must be a valid regular expression.
 		PasswordPattern string `yaml:"password_pattern"`
 
+		// JWT defines the JWT configuration.
 		JWT struct {
 			// TokenExpireTime defines the expiration time of a token in seconds.
 			TokenExpireTime int `yaml:"token_expire_time"`
@@ -29,6 +30,12 @@ type (
 			// TokenRefreshTime defines the refresh time of a token in seconds.
 			TokenRefreshTime int `yaml:"token_refresh_time"`
 		} `yaml:"jwt"`
+
+		// DefaultValue defines the default values for some configurations.
+		DefaultValue struct {
+			// UserState defines the default user state when a user is created.
+			UserState int8 `yaml:"user_state"`
+		} `yaml:"default_value"`
 	}
 
 	App struct {

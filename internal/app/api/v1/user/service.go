@@ -23,32 +23,111 @@ import (
 )
 
 func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
+	if !_validation.IsValidUsername(req.GetUsername()) {
+		return nil, errors.ErrInvalidParams.WithDetail("invalid username")
+	}
+	if !_validation.IsValidPassword(req.GetPassword()) {
+		return nil, errors.ErrInvalidParams.WithDetail("invalid password")
+	}
+	if req.GetEmail() != "" {
+		if !validation.IsValidEmail(req.GetEmail()) {
+			return nil, errors.ErrInvalidParams.WithDetail("invalid email")
+		}
+	}
+	if req.GetMobile() != "" {
+		isValidMobile, err := validation.IsValidMobileNumber(req.GetMobile(), "US")
+		if !isValidMobile || err != nil {
+			return nil, errors.ErrInvalidParams.WithDetail("invalid mobile")
+		}
+	}
+
+	usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
+	if err != nil {
+		return nil, err
+	}
+	if usernameExists {
+		return nil, errors.ErrUserExists.WithDetail("username already exists")
+	}
+	if req.GetEmail() != "" {
+		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
+		if err != nil {
+			return nil, err
+		}
+		if emailExists {
+			return nil, errors.ErrUserExists.WithDetail("email already exists")
+		}
+	}
+	if req.GetMobile() != "" {
+		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
+		if err != nil {
+			return nil, err
+		}
+		if mobileExists {
+			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
+		}
+	}
+	password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+
 	u := &model.User{
 		Model:    gorm.Model{ID: uint(snowflake.GetSnowWorker().NextId())},
 		Username: req.GetUsername(),
-		Password: req.GetPassword(),
+		Password: string(password),
 		Email:    req.GetEmail(),
 		Mobile:   req.GetMobile(),
 		State:    int8(req.GetState()),
 	}
-
-	for _, rid := range req.GetRoles() {
-		role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
-		if err != nil {
-			continue
-		}
-		u.Roles = append(u.Roles, role)
+	if u.State == 0 {
+		u.State = etc.GetConfig().App.Settings.DefaultValue.UserState
 	}
 
-	for _, gid := range req.GetGroups() {
-		group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
-		if err != nil {
-			continue
+	var roles []*model.Role
+	if len(req.GetRoles()) != 0 {
+		for _, rid := range req.GetRoles() {
+			role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
+			if err != nil {
+				log.GetLogger().Warn("tole doesn't exist", zap.Int64("id", rid))
+				continue
+			}
+			roles = append(roles, role)
 		}
-		u.Groups = append(u.Groups, group)
+	} else {
+		// assign default roles if no roles are provided.
+		roles, _, err = _usm.Client().ListRoles(&types.QueryRoleOptions{
+			IsDefault: []bool{true},
+			WithTotal: false,
+		})
+		if err != nil {
+			log.GetLogger().Warn("default role doesn't exist", zap.Error(err))
+		}
 	}
+	u.Roles = roles
 
-	err := _usm.Client().CreateUser(u)
+	var groups []*model.Group
+	if len(req.GetGroups()) != 0 {
+		for _, gid := range req.GetGroups() {
+			group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
+			if err != nil {
+				log.GetLogger().Warn("group doesn't exist", zap.Int64("id", gid))
+				continue
+			}
+			groups = append(groups, group)
+		}
+	} else {
+		// assign default groups if no groups are provided.
+		groups, _, err = _usm.Client().ListGroups(&types.QueryGroupOptions{
+			IsDefault: []bool{true},
+			WithTotal: false,
+		})
+		if err != nil {
+			log.GetLogger().Warn("default group doesn't exist", zap.Error(err))
+		}
+	}
+	u.Groups = groups
+
+	err = _usm.Client().CreateUser(u)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +152,15 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 		cols = append(cols, "Email")
 	}
 	if req.GetPassword() != "" {
+		if !_validation.IsValidPassword(req.GetPassword()) {
+			return nil, errors.ErrInvalidParams.WithDetail("invalid password")
+		}
 		u.Password = req.GetPassword()
+		cols = append(cols, "Password")
 	}
 	if req.GetState() != 0 {
 		u.State = int8(req.GetState())
+		cols = append(cols, "State")
 	}
 
 	var roles []*model.Role
@@ -107,6 +191,29 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 
 	if len(cols) == 0 {
 		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+	}
+
+	if u.Email != "" {
+		emailExists, err := _usm.Client().DoesEmailExist(u.Email)
+		if err != nil {
+			return nil, err
+		}
+		if emailExists {
+			return nil, errors.ErrUserExists.WithDetail("email already exists")
+		}
+	}
+	if u.Mobile != "" {
+		mobileExists, err := _usm.Client().DoesMobileExist(u.Mobile)
+		if err != nil {
+			return nil, err
+		}
+		if mobileExists {
+			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
+		}
+	}
+	err := _usm.Client().UpdateUser(u, cols...)
+	if err != nil {
+		return nil, err
 	}
 
 	return user.ModelToPb(u), nil
@@ -155,95 +262,13 @@ func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
 }
 
 func Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
-	if !_validation.IsValidUsername(req.GetUsername()) {
-		return nil, errors.ErrInvalidParams.WithDetail("invalid username")
-	}
-	if !_validation.IsValidPassword(req.GetPassword()) {
-		return nil, errors.ErrInvalidParams.WithDetail("invalid password")
-	}
-
-	usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
-	if err != nil {
-		return nil, err
-	}
-	if usernameExists {
-		return nil, errors.ErrUserExists.WithDetail("username already exists")
-	}
-	if req.GetEmail() != "" {
-		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
-		if err != nil {
-			return nil, err
-		}
-		if emailExists {
-			return nil, errors.ErrUserExists.WithDetail("email already exists")
-		}
-	}
-	if req.GetMobile() != "" {
-		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
-		if err != nil {
-			return nil, err
-		}
-		if mobileExists {
-			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
-		}
-	}
-	password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, errors.ErrInternalError.WithDetail(err.Error())
-	}
-
-	u := &model.User{
-		Model:    gorm.Model{ID: uint(snowflake.GetSnowWorker().NextId())},
+	_, err := Create(ctx, &pb.CreateReq{
 		Username: req.GetUsername(),
-		Password: string(password),
-		//State:    int8(req.GetState()),
-	}
-
-	var roles []*model.Role
-	if len(req.GetRoles()) != 0 {
-		for _, rid := range req.GetRoles() {
-			role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
-			if err != nil {
-				log.GetLogger().Warn("tole doesn't exist", zap.Uint64("id", rid))
-				continue
-			}
-			roles = append(roles, role)
-		}
-	} else {
-		// assign default roles if no roles are provided.
-		roles, _, err = _usm.Client().ListRoles(&types.QueryRoleOptions{
-			IsDefault: []bool{true},
-			WithTotal: false,
-		})
-		if err != nil {
-			log.GetLogger().Warn("default role doesn't exist", zap.Error(err))
-		}
-	}
-	u.Roles = roles
-
-	var groups []*model.Group
-	if len(req.GetGroups()) != 0 {
-		for _, gid := range req.GetGroups() {
-			group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
-			if err != nil {
-				log.GetLogger().Warn("group doesn't exist", zap.Uint64("id", gid))
-				continue
-			}
-			groups = append(groups, group)
-		}
-	} else {
-		// assign default groups if no groups are provided.
-		groups, _, err = _usm.Client().ListGroups(&types.QueryGroupOptions{
-			IsDefault: []bool{true},
-			WithTotal: false,
-		})
-		if err != nil {
-			log.GetLogger().Warn("default group doesn't exist", zap.Error(err))
-		}
-	}
-	u.Groups = groups
-
-	err = _usm.Client().CreateUser(u)
+		Password: req.GetPassword(),
+		Email:    req.GetEmail(),
+		Mobile:   req.GetMobile(),
+		State:    int32(etc.GetConfig().App.Settings.DefaultValue.UserState),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -362,4 +387,32 @@ func Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
 		}
 	}
 	return &pb.AuthResp{Authorized: false}, nil
+}
+
+func DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*pb.DoesIdentifierExistResp, error) {
+	var resp pb.DoesIdentifierExistResp
+
+	if req.GetEmail() != "" {
+		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
+		if err != nil {
+			return nil, err
+		}
+		resp.EmailExist = emailExists
+	}
+	if req.GetMobile() != "" {
+		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
+		if err != nil {
+			return nil, err
+		}
+		resp.MobileExist = mobileExists
+	}
+	if req.GetUsername() != "" {
+		usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
+		if err != nil {
+			return nil, err
+		}
+		resp.UsernameExist = usernameExists
+	}
+
+	return &resp, nil
 }
