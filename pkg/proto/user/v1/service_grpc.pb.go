@@ -20,15 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Service_Create_FullMethodName              = "/nortoo.usms.user.v1.Service/Create"
-	Service_Delete_FullMethodName              = "/nortoo.usms.user.v1.Service/Delete"
-	Service_Update_FullMethodName              = "/nortoo.usms.user.v1.Service/Update"
-	Service_Get_FullMethodName                 = "/nortoo.usms.user.v1.Service/Get"
-	Service_List_FullMethodName                = "/nortoo.usms.user.v1.Service/List"
-	Service_Signup_FullMethodName              = "/nortoo.usms.user.v1.Service/Signup"
-	Service_Login_FullMethodName               = "/nortoo.usms.user.v1.Service/Login"
-	Service_Auth_FullMethodName                = "/nortoo.usms.user.v1.Service/Auth"
-	Service_DoesIdentifierExist_FullMethodName = "/nortoo.usms.user.v1.Service/DoesIdentifierExist"
+	Service_Create_FullMethodName                  = "/nortoo.usms.user.v1.Service/Create"
+	Service_Delete_FullMethodName                  = "/nortoo.usms.user.v1.Service/Delete"
+	Service_Update_FullMethodName                  = "/nortoo.usms.user.v1.Service/Update"
+	Service_Get_FullMethodName                     = "/nortoo.usms.user.v1.Service/Get"
+	Service_List_FullMethodName                    = "/nortoo.usms.user.v1.Service/List"
+	Service_Signup_FullMethodName                  = "/nortoo.usms.user.v1.Service/Signup"
+	Service_Login_FullMethodName                   = "/nortoo.usms.user.v1.Service/Login"
+	Service_Auth_FullMethodName                    = "/nortoo.usms.user.v1.Service/Auth"
+	Service_ChangePassword_FullMethodName          = "/nortoo.usms.user.v1.Service/ChangePassword"
+	Service_ResetPassword_FullMethodName           = "/nortoo.usms.user.v1.Service/ResetPassword"
+	Service_ListVerificationMethods_FullMethodName = "/nortoo.usms.user.v1.Service/ListVerificationMethods"
+	Service_DoesIdentifierExist_FullMethodName     = "/nortoo.usms.user.v1.Service/DoesIdentifierExist"
 )
 
 // ServiceClient is the client API for Service service.
@@ -45,6 +48,9 @@ type ServiceClient interface {
 	Signup(ctx context.Context, in *SignupReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
 	Auth(ctx context.Context, in *AuthReq, opts ...grpc.CallOption) (*AuthResp, error)
+	ChangePassword(ctx context.Context, in *ChangePasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ResetPassword(ctx context.Context, in *ResetPasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListVerificationMethods(ctx context.Context, in *ListVerificationMethodsReq, opts ...grpc.CallOption) (*ListVerificationMethodsResp, error)
 	DoesIdentifierExist(ctx context.Context, in *DoesIdentifierExistReq, opts ...grpc.CallOption) (*DoesIdentifierExistResp, error)
 }
 
@@ -136,6 +142,36 @@ func (c *serviceClient) Auth(ctx context.Context, in *AuthReq, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *serviceClient) ChangePassword(ctx context.Context, in *ChangePasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Service_ChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) ResetPassword(ctx context.Context, in *ResetPasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Service_ResetPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) ListVerificationMethods(ctx context.Context, in *ListVerificationMethodsReq, opts ...grpc.CallOption) (*ListVerificationMethodsResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListVerificationMethodsResp)
+	err := c.cc.Invoke(ctx, Service_ListVerificationMethods_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *serviceClient) DoesIdentifierExist(ctx context.Context, in *DoesIdentifierExistReq, opts ...grpc.CallOption) (*DoesIdentifierExistResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DoesIdentifierExistResp)
@@ -160,6 +196,9 @@ type ServiceServer interface {
 	Signup(context.Context, *SignupReq) (*emptypb.Empty, error)
 	Login(context.Context, *LoginReq) (*LoginResp, error)
 	Auth(context.Context, *AuthReq) (*AuthResp, error)
+	ChangePassword(context.Context, *ChangePasswordReq) (*emptypb.Empty, error)
+	ResetPassword(context.Context, *ResetPasswordReq) (*emptypb.Empty, error)
+	ListVerificationMethods(context.Context, *ListVerificationMethodsReq) (*ListVerificationMethodsResp, error)
 	DoesIdentifierExist(context.Context, *DoesIdentifierExistReq) (*DoesIdentifierExistResp, error)
 	mustEmbedUnimplementedServiceServer()
 }
@@ -194,6 +233,15 @@ func (UnimplementedServiceServer) Login(context.Context, *LoginReq) (*LoginResp,
 }
 func (UnimplementedServiceServer) Auth(context.Context, *AuthReq) (*AuthResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
+}
+func (UnimplementedServiceServer) ChangePassword(context.Context, *ChangePasswordReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
+}
+func (UnimplementedServiceServer) ResetPassword(context.Context, *ResetPasswordReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetPassword not implemented")
+}
+func (UnimplementedServiceServer) ListVerificationMethods(context.Context, *ListVerificationMethodsReq) (*ListVerificationMethodsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListVerificationMethods not implemented")
 }
 func (UnimplementedServiceServer) DoesIdentifierExist(context.Context, *DoesIdentifierExistReq) (*DoesIdentifierExistResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DoesIdentifierExist not implemented")
@@ -363,6 +411,60 @@ func _Service_Auth_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_ChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ChangePassword(ctx, req.(*ChangePasswordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_ResetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetPasswordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ResetPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_ResetPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ResetPassword(ctx, req.(*ResetPasswordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_ListVerificationMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListVerificationMethodsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ListVerificationMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_ListVerificationMethods_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ListVerificationMethods(ctx, req.(*ListVerificationMethodsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Service_DoesIdentifierExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DoesIdentifierExistReq)
 	if err := dec(in); err != nil {
@@ -419,6 +521,18 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Auth",
 			Handler:    _Service_Auth_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _Service_ChangePassword_Handler,
+		},
+		{
+			MethodName: "ResetPassword",
+			Handler:    _Service_ResetPassword_Handler,
+		},
+		{
+			MethodName: "ListVerificationMethods",
+			Handler:    _Service_ListVerificationMethods_Handler,
 		},
 		{
 			MethodName: "DoesIdentifierExist",

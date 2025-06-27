@@ -25,7 +25,7 @@ var File_pkg_proto_user_v1_service_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_user_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1fpkg/proto/user/v1/service.proto\x12\x13nortoo.usms.user.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fpkg/proto/user/v1/message.proto2\x9a\x05\n" +
+	"\x1fpkg/proto/user/v1/service.proto\x12\x13nortoo.usms.user.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fpkg/proto/user/v1/message.proto2\xba\a\n" +
 	"\aService\x12C\n" +
 	"\x06Create\x12\x1e.nortoo.usms.user.v1.CreateReq\x1a\x19.nortoo.usms.user.v1.User\x12@\n" +
 	"\x06Delete\x12\x1e.nortoo.usms.user.v1.DeleteReq\x1a\x16.google.protobuf.Empty\x12C\n" +
@@ -34,25 +34,32 @@ const file_pkg_proto_user_v1_service_proto_rawDesc = "" +
 	"\x04List\x12\x1c.nortoo.usms.user.v1.ListReq\x1a\x1d.nortoo.usms.user.v1.ListResp\x12@\n" +
 	"\x06Signup\x12\x1e.nortoo.usms.user.v1.SignupReq\x1a\x16.google.protobuf.Empty\x12F\n" +
 	"\x05Login\x12\x1d.nortoo.usms.user.v1.LoginReq\x1a\x1e.nortoo.usms.user.v1.LoginResp\x12C\n" +
-	"\x04Auth\x12\x1c.nortoo.usms.user.v1.AuthReq\x1a\x1d.nortoo.usms.user.v1.AuthResp\x12p\n" +
+	"\x04Auth\x12\x1c.nortoo.usms.user.v1.AuthReq\x1a\x1d.nortoo.usms.user.v1.AuthResp\x12P\n" +
+	"\x0eChangePassword\x12&.nortoo.usms.user.v1.ChangePasswordReq\x1a\x16.google.protobuf.Empty\x12N\n" +
+	"\rResetPassword\x12%.nortoo.usms.user.v1.ResetPasswordReq\x1a\x16.google.protobuf.Empty\x12|\n" +
+	"\x17ListVerificationMethods\x12/.nortoo.usms.user.v1.ListVerificationMethodsReq\x1a0.nortoo.usms.user.v1.ListVerificationMethodsResp\x12p\n" +
 	"\x13DoesIdentifierExist\x12+.nortoo.usms.user.v1.DoesIdentifierExistReq\x1a,.nortoo.usms.user.v1.DoesIdentifierExistRespB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
 
 var file_pkg_proto_user_v1_service_proto_goTypes = []any{
-	(*CreateReq)(nil),               // 0: nortoo.usms.user.v1.CreateReq
-	(*DeleteReq)(nil),               // 1: nortoo.usms.user.v1.DeleteReq
-	(*UpdateReq)(nil),               // 2: nortoo.usms.user.v1.UpdateReq
-	(*GetReq)(nil),                  // 3: nortoo.usms.user.v1.GetReq
-	(*ListReq)(nil),                 // 4: nortoo.usms.user.v1.ListReq
-	(*SignupReq)(nil),               // 5: nortoo.usms.user.v1.SignupReq
-	(*LoginReq)(nil),                // 6: nortoo.usms.user.v1.LoginReq
-	(*AuthReq)(nil),                 // 7: nortoo.usms.user.v1.AuthReq
-	(*DoesIdentifierExistReq)(nil),  // 8: nortoo.usms.user.v1.DoesIdentifierExistReq
-	(*User)(nil),                    // 9: nortoo.usms.user.v1.User
-	(*emptypb.Empty)(nil),           // 10: google.protobuf.Empty
-	(*ListResp)(nil),                // 11: nortoo.usms.user.v1.ListResp
-	(*LoginResp)(nil),               // 12: nortoo.usms.user.v1.LoginResp
-	(*AuthResp)(nil),                // 13: nortoo.usms.user.v1.AuthResp
-	(*DoesIdentifierExistResp)(nil), // 14: nortoo.usms.user.v1.DoesIdentifierExistResp
+	(*CreateReq)(nil),                   // 0: nortoo.usms.user.v1.CreateReq
+	(*DeleteReq)(nil),                   // 1: nortoo.usms.user.v1.DeleteReq
+	(*UpdateReq)(nil),                   // 2: nortoo.usms.user.v1.UpdateReq
+	(*GetReq)(nil),                      // 3: nortoo.usms.user.v1.GetReq
+	(*ListReq)(nil),                     // 4: nortoo.usms.user.v1.ListReq
+	(*SignupReq)(nil),                   // 5: nortoo.usms.user.v1.SignupReq
+	(*LoginReq)(nil),                    // 6: nortoo.usms.user.v1.LoginReq
+	(*AuthReq)(nil),                     // 7: nortoo.usms.user.v1.AuthReq
+	(*ChangePasswordReq)(nil),           // 8: nortoo.usms.user.v1.ChangePasswordReq
+	(*ResetPasswordReq)(nil),            // 9: nortoo.usms.user.v1.ResetPasswordReq
+	(*ListVerificationMethodsReq)(nil),  // 10: nortoo.usms.user.v1.ListVerificationMethodsReq
+	(*DoesIdentifierExistReq)(nil),      // 11: nortoo.usms.user.v1.DoesIdentifierExistReq
+	(*User)(nil),                        // 12: nortoo.usms.user.v1.User
+	(*emptypb.Empty)(nil),               // 13: google.protobuf.Empty
+	(*ListResp)(nil),                    // 14: nortoo.usms.user.v1.ListResp
+	(*LoginResp)(nil),                   // 15: nortoo.usms.user.v1.LoginResp
+	(*AuthResp)(nil),                    // 16: nortoo.usms.user.v1.AuthResp
+	(*ListVerificationMethodsResp)(nil), // 17: nortoo.usms.user.v1.ListVerificationMethodsResp
+	(*DoesIdentifierExistResp)(nil),     // 18: nortoo.usms.user.v1.DoesIdentifierExistResp
 }
 var file_pkg_proto_user_v1_service_proto_depIdxs = []int32{
 	0,  // 0: nortoo.usms.user.v1.Service.Create:input_type -> nortoo.usms.user.v1.CreateReq
@@ -63,18 +70,24 @@ var file_pkg_proto_user_v1_service_proto_depIdxs = []int32{
 	5,  // 5: nortoo.usms.user.v1.Service.Signup:input_type -> nortoo.usms.user.v1.SignupReq
 	6,  // 6: nortoo.usms.user.v1.Service.Login:input_type -> nortoo.usms.user.v1.LoginReq
 	7,  // 7: nortoo.usms.user.v1.Service.Auth:input_type -> nortoo.usms.user.v1.AuthReq
-	8,  // 8: nortoo.usms.user.v1.Service.DoesIdentifierExist:input_type -> nortoo.usms.user.v1.DoesIdentifierExistReq
-	9,  // 9: nortoo.usms.user.v1.Service.Create:output_type -> nortoo.usms.user.v1.User
-	10, // 10: nortoo.usms.user.v1.Service.Delete:output_type -> google.protobuf.Empty
-	9,  // 11: nortoo.usms.user.v1.Service.Update:output_type -> nortoo.usms.user.v1.User
-	9,  // 12: nortoo.usms.user.v1.Service.Get:output_type -> nortoo.usms.user.v1.User
-	11, // 13: nortoo.usms.user.v1.Service.List:output_type -> nortoo.usms.user.v1.ListResp
-	10, // 14: nortoo.usms.user.v1.Service.Signup:output_type -> google.protobuf.Empty
-	12, // 15: nortoo.usms.user.v1.Service.Login:output_type -> nortoo.usms.user.v1.LoginResp
-	13, // 16: nortoo.usms.user.v1.Service.Auth:output_type -> nortoo.usms.user.v1.AuthResp
-	14, // 17: nortoo.usms.user.v1.Service.DoesIdentifierExist:output_type -> nortoo.usms.user.v1.DoesIdentifierExistResp
-	9,  // [9:18] is the sub-list for method output_type
-	0,  // [0:9] is the sub-list for method input_type
+	8,  // 8: nortoo.usms.user.v1.Service.ChangePassword:input_type -> nortoo.usms.user.v1.ChangePasswordReq
+	9,  // 9: nortoo.usms.user.v1.Service.ResetPassword:input_type -> nortoo.usms.user.v1.ResetPasswordReq
+	10, // 10: nortoo.usms.user.v1.Service.ListVerificationMethods:input_type -> nortoo.usms.user.v1.ListVerificationMethodsReq
+	11, // 11: nortoo.usms.user.v1.Service.DoesIdentifierExist:input_type -> nortoo.usms.user.v1.DoesIdentifierExistReq
+	12, // 12: nortoo.usms.user.v1.Service.Create:output_type -> nortoo.usms.user.v1.User
+	13, // 13: nortoo.usms.user.v1.Service.Delete:output_type -> google.protobuf.Empty
+	12, // 14: nortoo.usms.user.v1.Service.Update:output_type -> nortoo.usms.user.v1.User
+	12, // 15: nortoo.usms.user.v1.Service.Get:output_type -> nortoo.usms.user.v1.User
+	14, // 16: nortoo.usms.user.v1.Service.List:output_type -> nortoo.usms.user.v1.ListResp
+	13, // 17: nortoo.usms.user.v1.Service.Signup:output_type -> google.protobuf.Empty
+	15, // 18: nortoo.usms.user.v1.Service.Login:output_type -> nortoo.usms.user.v1.LoginResp
+	16, // 19: nortoo.usms.user.v1.Service.Auth:output_type -> nortoo.usms.user.v1.AuthResp
+	13, // 20: nortoo.usms.user.v1.Service.ChangePassword:output_type -> google.protobuf.Empty
+	13, // 21: nortoo.usms.user.v1.Service.ResetPassword:output_type -> google.protobuf.Empty
+	17, // 22: nortoo.usms.user.v1.Service.ListVerificationMethods:output_type -> nortoo.usms.user.v1.ListVerificationMethodsResp
+	18, // 23: nortoo.usms.user.v1.Service.DoesIdentifierExist:output_type -> nortoo.usms.user.v1.DoesIdentifierExistResp
+	12, // [12:24] is the sub-list for method output_type
+	0,  // [0:12] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

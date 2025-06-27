@@ -18,5 +18,9 @@ service Service {
   rpc Signup(SignupReq) returns (google.protobuf.Empty);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Auth(AuthReq) returns (AuthResp);
+  rpc ChangePassword(ChangePasswordReq) returns (google.protobuf.Empty);
+  rpc ResetPassword(ResetPasswordReq) returns (google.protobuf.Empty);
+
+  rpc ListVerificationMethods(ListVerificationMethodsReq) returns (ListVerificationMethodsResp);
   rpc DoesIdentifierExist(DoesIdentifierExistReq) returns (DoesIdentifierExistResp);
 }
