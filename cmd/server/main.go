@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -13,12 +14,22 @@ import (
 )
 
 func main() {
-	err := log.InitLogger("conf/log.json")
+	logCfgPath := flag.String("logcfg", "conf/log.json", "logger config file path")
+	configPath := flag.String("c", "conf/app.yml", "config file path")
+
+	flag.Parse()
+
+	if logCfgPath == nil || *logCfgPath == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	err := log.InitLogger(*logCfgPath)
 	if err != nil {
 		fmt.Printf("Failed to init logger: %v\n", err)
 		os.Exit(1)
 	}
-	if err = etc.Load("conf/app.yml"); err != nil {
+	if err = etc.Load(*configPath); err != nil {
 		log.GetLogger().Fatal("Failed to load config file", zap.Error(err))
 		os.Exit(1)
 	}

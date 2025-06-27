@@ -297,7 +297,7 @@ func recognizeLoginIdentity(req *pb.LoginReq) loginIdentifier {
 		return identifierEmail
 	} else if isValid, _ := validation.IsValidMobileNumber(identifier, "US"); isValid {
 		return identifierMobile
-	} else if _, err := _validation.IsValidUsername(identifier); err != nil {
+	} else if _, err := _validation.IsValidUsername(identifier); err == nil {
 		return identifierUsername
 	} else {
 		return "unknown"
@@ -317,7 +317,7 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	case identifierUsername:
 		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
 	default:
-		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid username")
 	}
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
