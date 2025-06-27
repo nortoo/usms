@@ -14,13 +14,22 @@ type (
 	}
 
 	Settings struct {
-		// UsernamePattern defines the verification pattern of a valid username.
-		// It must be a valid regular expression.
-		UsernamePattern string `yaml:"username_pattern"`
+		Validation struct {
+			// UsernamePattern defines the verification pattern of a valid username.
+			UsernamePattern struct {
+				MinLength int `yaml:"min_length"`
+				MaxLength int `yaml:"max_length"`
+			} `yaml:"username_pattern"`
 
-		// PasswordPattern defines the verification pattern of a valid password.
-		// It must be a valid regular expression.
-		PasswordPattern string `yaml:"password_pattern"`
+			// PasswordPattern defines the verification pattern of a valid password.
+			PasswordPattern struct {
+				MinLength           int  `yaml:"min_length"`
+				RequireUpperCase    bool `yaml:"require_upper_case"`
+				RequireLowerCase    bool `yaml:"require_lower_case"`
+				RequireDigit        bool `yaml:"require_digit"`
+				RequireSpecialChars bool `yaml:"require_special_chars"`
+			} `yaml:"password_pattern"`
+		} `yaml:"validation"`
 
 		// JWT defines the JWT configuration.
 		JWT struct {

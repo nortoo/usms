@@ -23,11 +23,11 @@ import (
 )
 
 func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
-	if !_validation.IsValidUsername(req.GetUsername()) {
-		return nil, errors.ErrInvalidParams.WithDetail("invalid username")
+	if _, err := _validation.IsValidUsername(req.GetUsername()); err != nil {
+		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
-	if !_validation.IsValidPassword(req.GetPassword()) {
-		return nil, errors.ErrInvalidParams.WithDetail("invalid password")
+	if _, err := _validation.IsValidPassword(req.GetPassword()); err != nil {
+		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
 	if req.GetEmail() != "" {
 		if !validation.IsValidEmail(req.GetEmail()) {
@@ -152,8 +152,8 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 		cols = append(cols, "Email")
 	}
 	if req.GetPassword() != "" {
-		if !_validation.IsValidPassword(req.GetPassword()) {
-			return nil, errors.ErrInvalidParams.WithDetail("invalid password")
+		if _, err := _validation.IsValidPassword(req.GetPassword()); err != nil {
+			return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 		}
 
 		password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
@@ -297,7 +297,7 @@ func recognizeLoginIdentity(req *pb.LoginReq) loginIdentifier {
 		return identifierEmail
 	} else if isValid, _ := validation.IsValidMobileNumber(identifier, "US"); isValid {
 		return identifierMobile
-	} else if _validation.IsValidUsername(identifier) {
+	} else if _, err := _validation.IsValidUsername(identifier); err != nil {
 		return identifierUsername
 	} else {
 		return "unknown"

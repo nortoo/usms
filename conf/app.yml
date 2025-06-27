@@ -8,12 +8,21 @@ app:
     jwt:
       token_expire_time: 3600  # in seconds
       token_refresh_time: 2592000  # in seconds
-    username_pattern: '^[a-zA-Z0-9_]{3,20}$'  # 3-20 characters, alphanumeric and underscores
-    password_pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$' # At least 8 characters, one uppercase, one lowercase, and one digit
+
+    validation:
+      username_pattern:
+        min_length: 5
+        max_length: 20
+      password_pattern:
+        min_length: 8
+        require_upper_case: true
+        require_lower_case: true
+        require_digit: true
+        require_special_chars: true
+
     default_value:
       user_state: 1
-
-
+      
 store:
   mysql:
     default:

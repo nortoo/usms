@@ -1,0 +1,12 @@
+app:
+  settings:
+    validation:
+      username_pattern:
+        min_length: 5
+        max_length: 20
+      password_pattern:
+        min_length: 8
+        require_upper_case: true
+        require_lower_case: true
+        require_digit: true
+        require_special_chars: true
