@@ -15,7 +15,8 @@ import (
 	"github.com/nortoo/usms/internal/pkg/store"
 	"github.com/nortoo/usms/internal/pkg/types/user"
 	_usm "github.com/nortoo/usms/internal/pkg/usm"
-	"github.com/nortoo/usms/internal/pkg/utils"
+	"github.com/nortoo/usms/internal/pkg/utils/encryption"
+	"github.com/nortoo/usms/internal/pkg/utils/identification"
 	_validation "github.com/nortoo/usms/internal/pkg/validation"
 	"github.com/nortoo/usms/pkg/errors"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
@@ -73,7 +74,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 		}
 	}
 
-	password, err := utils.EncryptPassword(req.GetPassword())
+	password, err := encryption.EncryptPassword(req.GetPassword())
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
@@ -163,7 +164,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 			return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 		}
 
-		password, err := utils.EncryptPassword(req.GetPassword())
+		password, err := encryption.EncryptPassword(req.GetPassword())
 		if err != nil {
 			return nil, errors.ErrInternalError.WithDetail(err.Error())
 		}
@@ -232,7 +233,25 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 }
 
 func Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
-	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+	var u *model.User
+	var err error
+
+	if req.GetId() != 0 {
+		u, err = _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+	} else {
+		identifier := req.GetIdentifier()
+		switch identification.Recognize(identifier) {
+		case identification.Email:
+			u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+		case identification.Mobile:
+			u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+		case identification.Username:
+			u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+		default:
+			return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -288,48 +307,25 @@ func Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
 }
 
-// loginIdentifier represents the identity type for login including username, email, and mobile.
-type loginIdentifier string
-
-const (
-	identifierUsername loginIdentifier = "username"
-	identifierEmail    loginIdentifier = "email"
-	identifierMobile   loginIdentifier = "mobile"
-)
-
-func recognizeLoginIdentity(req *pb.LoginReq) loginIdentifier {
-	identifier := req.GetIdentifier()
-
-	if validation.IsValidEmail(identifier) {
-		return identifierEmail
-	} else if isValid, _ := validation.IsValidMobileNumber(identifier, "US"); isValid {
-		return identifierMobile
-	} else if _, err := _validation.IsValidUsername(identifier); err == nil {
-		return identifierUsername
-	} else {
-		return "unknown"
-	}
-}
-
 func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	var u *model.User
 	var err error
 
 	identifier := req.GetIdentifier()
-	switch recognizeLoginIdentity(req) {
-	case identifierEmail:
+	switch identification.Recognize(identifier) {
+	case identification.Email:
 		u, err = _usm.Client().GetUser(&model.User{Email: identifier})
-	case identifierMobile:
+	case identification.Mobile:
 		u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
-	case identifierUsername:
+	case identification.Username:
 		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
 	default:
-		return nil, errors.ErrUnauthenticated.WithDetail("invalid username")
+		return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
 	}
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
-	if !utils.ComparePassword(u.Password, req.GetPassword()) {
+	if !encryption.ComparePassword(u.Password, req.GetPassword()) {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
 
@@ -525,7 +521,32 @@ func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Em
 		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
 
-	password, err := utils.EncryptPassword(req.GetNewPassword())
+	password, err := encryption.EncryptPassword(req.GetNewPassword())
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+	u.Password = password
+
+	err = _usm.Client().UpdateUser(u, "Password")
+	if err != nil {
+		return nil, err
+	}
+	revokeUserTokens(ctx, u.ID)
+
+	return &emptypb.Empty{}, nil
+}
+
+func ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error) {
+	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := _validation.IsValidPassword(req.GetNewPassword()); err != nil {
+		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
+	}
+
+	password, err := encryption.EncryptPassword(req.GetNewPassword())
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}

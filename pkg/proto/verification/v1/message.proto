@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package nortoo.usms.verification.v1;
+
+option go_package = "github.com/nortoo/usms/pkg/proto/verification/v1;v1";
+
+message ListVerificationMethodsReq {
+  string identifier = 1;
+}
+
+enum EnumVerification {
+  Undefined = 0;
+  Email = 1;
+  Mobile = 2;
+}
+
+message VerificationMethod {
+  EnumVerification verification_method = 1;
+  string target = 2;
+}
+
+message ListVerificationMethodsResp {
+  repeated VerificationMethod available_verification_methods = 1;
+}
+
+message GetVerificationTargetReq {
+  EnumVerification verification_method = 1;
+  string identifier = 2;
+}
+
+message GetVerificationTargetResp {
+  EnumVerification verification_method = 1;
+  string target = 2;
+}

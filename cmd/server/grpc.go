@@ -13,6 +13,7 @@ import (
 	"github.com/nortoo/usms/internal/app/api/v1/permission"
 	"github.com/nortoo/usms/internal/app/api/v1/role"
 	"github.com/nortoo/usms/internal/app/api/v1/user"
+	"github.com/nortoo/usms/internal/app/api/v1/verification"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -50,6 +51,7 @@ func run(port int, certFile, keyFile, caFile string) error {
 	permission.Register(grpcServer)
 	role.Register(grpcServer)
 	user.Register(grpcServer)
+	verification.Register(grpcServer)
 
 	fmt.Printf("gRPC server is running on :%d\n", port)
 	return grpcServer.Serve(lis)

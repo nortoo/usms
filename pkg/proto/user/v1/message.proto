@@ -45,6 +45,7 @@ message UpdateReq {
 
 message GetReq {
   uint64 id = 1;
+  string identifier = 2;
 }
 
 message ListReq {
@@ -113,28 +114,7 @@ message ChangePasswordReq {
   string new_password = 3;
 }
 
-message ListVerificationMethodsReq {
-  string identifier = 1;
-}
-
-enum EnumVerification {
-  Undefined = 0;
-  Email = 1;
-  Mobile = 2;
-}
-
-message VerificationMethod {
-  EnumVerification verification_method = 1;
-  string identifier = 2;
-}
-
-message ListVerificationMethodsResp {
-  repeated VerificationMethod available_verification_methods = 1;
-}
-
 message ResetPasswordReq {
-  EnumVerification verification_method = 1;
-  string identifier = 2;
-  string code = 3;
-  string new_password = 4;
+  uint64 uid = 1;
+  string new_password = 2;
 }

@@ -45,8 +45,8 @@ func (s *Service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, erro
 }
 
 func (s *Service) Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
-	if req.GetId() <= 0 {
-		return nil, errors.ErrInvalidParams.WithDetail("id is required.")
+	if req.GetId() <= 0 && req.GetIdentifier() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("either uid or identifier is required.")
 	}
 	return Get(ctx, req)
 }
@@ -112,4 +112,15 @@ func (s *Service) ChangePassword(ctx context.Context, req *pb.ChangePasswordReq)
 		return nil, errors.ErrInvalidParams.WithDetail("new password is required.")
 	}
 	return ChangePassword(ctx, req)
+}
+
+func (s *Service) ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error) {
+	if req.GetUid() <= 0 {
+		return nil, errors.ErrInvalidParams.WithDetail("uid is required.")
+	}
+	if req.GetNewPassword() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("new password is required.")
+	}
+
+	return ResetPassword(ctx, req)
 }

@@ -24,55 +24,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type EnumVerification int32
-
-const (
-	EnumVerification_Undefined EnumVerification = 0
-	EnumVerification_Email     EnumVerification = 1
-	EnumVerification_Mobile    EnumVerification = 2
-)
-
-// Enum value maps for EnumVerification.
-var (
-	EnumVerification_name = map[int32]string{
-		0: "Undefined",
-		1: "Email",
-		2: "Mobile",
-	}
-	EnumVerification_value = map[string]int32{
-		"Undefined": 0,
-		"Email":     1,
-		"Mobile":    2,
-	}
-)
-
-func (x EnumVerification) Enum() *EnumVerification {
-	p := new(EnumVerification)
-	*p = x
-	return p
-}
-
-func (x EnumVerification) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (EnumVerification) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_proto_user_v1_message_proto_enumTypes[0].Descriptor()
-}
-
-func (EnumVerification) Type() protoreflect.EnumType {
-	return &file_pkg_proto_user_v1_message_proto_enumTypes[0]
-}
-
-func (x EnumVerification) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use EnumVerification.Descriptor instead.
-func (EnumVerification) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{0}
-}
-
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -404,6 +355,7 @@ func (x *UpdateReq) GetState() int32 {
 type GetReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Identifier    string                 `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -443,6 +395,13 @@ func (x *GetReq) GetId() uint64 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *GetReq) GetIdentifier() string {
+	if x != nil {
+		return x.Identifier
+	}
+	return ""
 }
 
 type ListReq struct {
@@ -1086,159 +1045,17 @@ func (x *ChangePasswordReq) GetNewPassword() string {
 	return ""
 }
 
-type ListVerificationMethodsReq struct {
+type ResetPasswordReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Identifier    string                 `protobuf:"bytes,1,opt,name=identifier,proto3" json:"identifier,omitempty"`
+	Uid           uint64                 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	NewPassword   string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListVerificationMethodsReq) Reset() {
-	*x = ListVerificationMethodsReq{}
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVerificationMethodsReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVerificationMethodsReq) ProtoMessage() {}
-
-func (x *ListVerificationMethodsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListVerificationMethodsReq.ProtoReflect.Descriptor instead.
-func (*ListVerificationMethodsReq) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *ListVerificationMethodsReq) GetIdentifier() string {
-	if x != nil {
-		return x.Identifier
-	}
-	return ""
-}
-
-type VerificationMethod struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	VerificationMethod EnumVerification       `protobuf:"varint,1,opt,name=verification_method,json=verificationMethod,proto3,enum=nortoo.usms.user.v1.EnumVerification" json:"verification_method,omitempty"`
-	Identifier         string                 `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
-}
-
-func (x *VerificationMethod) Reset() {
-	*x = VerificationMethod{}
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *VerificationMethod) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*VerificationMethod) ProtoMessage() {}
-
-func (x *VerificationMethod) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use VerificationMethod.ProtoReflect.Descriptor instead.
-func (*VerificationMethod) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *VerificationMethod) GetVerificationMethod() EnumVerification {
-	if x != nil {
-		return x.VerificationMethod
-	}
-	return EnumVerification_Undefined
-}
-
-func (x *VerificationMethod) GetIdentifier() string {
-	if x != nil {
-		return x.Identifier
-	}
-	return ""
-}
-
-type ListVerificationMethodsResp struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	AvailableVerificationMethods []*VerificationMethod  `protobuf:"bytes,1,rep,name=available_verification_methods,json=availableVerificationMethods,proto3" json:"available_verification_methods,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
-}
-
-func (x *ListVerificationMethodsResp) Reset() {
-	*x = ListVerificationMethodsResp{}
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVerificationMethodsResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVerificationMethodsResp) ProtoMessage() {}
-
-func (x *ListVerificationMethodsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListVerificationMethodsResp.ProtoReflect.Descriptor instead.
-func (*ListVerificationMethodsResp) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ListVerificationMethodsResp) GetAvailableVerificationMethods() []*VerificationMethod {
-	if x != nil {
-		return x.AvailableVerificationMethods
-	}
-	return nil
-}
-
-type ResetPasswordReq struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	VerificationMethod EnumVerification       `protobuf:"varint,1,opt,name=verification_method,json=verificationMethod,proto3,enum=nortoo.usms.user.v1.EnumVerification" json:"verification_method,omitempty"`
-	Identifier         string                 `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	Code               string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
-	NewPassword        string                 `protobuf:"bytes,4,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
-}
-
 func (x *ResetPasswordReq) Reset() {
 	*x = ResetPasswordReq{}
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[18]
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1067,7 @@ func (x *ResetPasswordReq) String() string {
 func (*ResetPasswordReq) ProtoMessage() {}
 
 func (x *ResetPasswordReq) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[18]
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,28 +1080,14 @@ func (x *ResetPasswordReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResetPasswordReq.ProtoReflect.Descriptor instead.
 func (*ResetPasswordReq) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{18}
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *ResetPasswordReq) GetVerificationMethod() EnumVerification {
+func (x *ResetPasswordReq) GetUid() uint64 {
 	if x != nil {
-		return x.VerificationMethod
+		return x.Uid
 	}
-	return EnumVerification_Undefined
-}
-
-func (x *ResetPasswordReq) GetIdentifier() string {
-	if x != nil {
-		return x.Identifier
-	}
-	return ""
-}
-
-func (x *ResetPasswordReq) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
+	return 0
 }
 
 func (x *ResetPasswordReq) GetNewPassword() string {
@@ -1325,9 +1128,12 @@ const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
 	"\x06mobile\x18\x04 \x01(\tR\x06mobile\x12\x14\n" +
 	"\x05roles\x18\x05 \x03(\x03R\x05roles\x12\x16\n" +
 	"\x06groups\x18\x06 \x03(\x03R\x06groups\x12\x14\n" +
-	"\x05state\x18\a \x01(\x05R\x05state\"\x18\n" +
+	"\x05state\x18\a \x01(\x05R\x05state\"8\n" +
 	"\x06GetReq\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\"\xe6\x01\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1e\n" +
+	"\n" +
+	"identifier\x18\x02 \x01(\tR\n" +
+	"identifier\"\xe6\x01\n" +
 	"\aListReq\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x16\n" +
@@ -1383,30 +1189,10 @@ const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
 	"\x11ChangePasswordReq\x12\x10\n" +
 	"\x03uid\x18\x01 \x01(\x04R\x03uid\x12!\n" +
 	"\fold_password\x18\x02 \x01(\tR\voldPassword\x12!\n" +
-	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"<\n" +
-	"\x1aListVerificationMethodsReq\x12\x1e\n" +
-	"\n" +
-	"identifier\x18\x01 \x01(\tR\n" +
-	"identifier\"\x8c\x01\n" +
-	"\x12VerificationMethod\x12V\n" +
-	"\x13verification_method\x18\x01 \x01(\x0e2%.nortoo.usms.user.v1.EnumVerificationR\x12verificationMethod\x12\x1e\n" +
-	"\n" +
-	"identifier\x18\x02 \x01(\tR\n" +
-	"identifier\"\x8c\x01\n" +
-	"\x1bListVerificationMethodsResp\x12m\n" +
-	"\x1eavailable_verification_methods\x18\x01 \x03(\v2'.nortoo.usms.user.v1.VerificationMethodR\x1cavailableVerificationMethods\"\xc1\x01\n" +
-	"\x10ResetPasswordReq\x12V\n" +
-	"\x13verification_method\x18\x01 \x01(\x0e2%.nortoo.usms.user.v1.EnumVerificationR\x12verificationMethod\x12\x1e\n" +
-	"\n" +
-	"identifier\x18\x02 \x01(\tR\n" +
-	"identifier\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\x12!\n" +
-	"\fnew_password\x18\x04 \x01(\tR\vnewPassword*8\n" +
-	"\x10EnumVerification\x12\r\n" +
-	"\tUndefined\x10\x00\x12\t\n" +
-	"\x05Email\x10\x01\x12\n" +
-	"\n" +
-	"\x06Mobile\x10\x02B-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
+	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"G\n" +
+	"\x10ResetPasswordReq\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\x04R\x03uid\x12!\n" +
+	"\fnew_password\x18\x02 \x01(\tR\vnewPasswordB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
 
 var (
 	file_pkg_proto_user_v1_message_proto_rawDescOnce sync.Once
@@ -1420,51 +1206,43 @@ func file_pkg_proto_user_v1_message_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_user_v1_message_proto_rawDescData
 }
 
-var file_pkg_proto_user_v1_message_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_pkg_proto_user_v1_message_proto_goTypes = []any{
-	(EnumVerification)(0),               // 0: nortoo.usms.user.v1.EnumVerification
-	(*User)(nil),                        // 1: nortoo.usms.user.v1.User
-	(*CreateReq)(nil),                   // 2: nortoo.usms.user.v1.CreateReq
-	(*DeleteReq)(nil),                   // 3: nortoo.usms.user.v1.DeleteReq
-	(*UpdateReq)(nil),                   // 4: nortoo.usms.user.v1.UpdateReq
-	(*GetReq)(nil),                      // 5: nortoo.usms.user.v1.GetReq
-	(*ListReq)(nil),                     // 6: nortoo.usms.user.v1.ListReq
-	(*ListResp)(nil),                    // 7: nortoo.usms.user.v1.ListResp
-	(*SignupReq)(nil),                   // 8: nortoo.usms.user.v1.SignupReq
-	(*LoginReq)(nil),                    // 9: nortoo.usms.user.v1.LoginReq
-	(*LoginResp)(nil),                   // 10: nortoo.usms.user.v1.LoginResp
-	(*AuthReq)(nil),                     // 11: nortoo.usms.user.v1.AuthReq
-	(*AuthResp)(nil),                    // 12: nortoo.usms.user.v1.AuthResp
-	(*DoesIdentifierExistReq)(nil),      // 13: nortoo.usms.user.v1.DoesIdentifierExistReq
-	(*DoesIdentifierExistResp)(nil),     // 14: nortoo.usms.user.v1.DoesIdentifierExistResp
-	(*ChangePasswordReq)(nil),           // 15: nortoo.usms.user.v1.ChangePasswordReq
-	(*ListVerificationMethodsReq)(nil),  // 16: nortoo.usms.user.v1.ListVerificationMethodsReq
-	(*VerificationMethod)(nil),          // 17: nortoo.usms.user.v1.VerificationMethod
-	(*ListVerificationMethodsResp)(nil), // 18: nortoo.usms.user.v1.ListVerificationMethodsResp
-	(*ResetPasswordReq)(nil),            // 19: nortoo.usms.user.v1.ResetPasswordReq
-	(*v1.Role)(nil),                     // 20: nortoo.usms.role.v1.Role
-	(*v11.Group)(nil),                   // 21: nortoo.usms.usergroup.v1.Group
-	(*types.TimeModel)(nil),             // 22: nortoo.usms.common.v1.types.TimeModel
-	(*types.Pagination)(nil),            // 23: nortoo.usms.common.v1.types.Pagination
-	(*types.PaginationResp)(nil),        // 24: nortoo.usms.common.v1.types.PaginationResp
+	(*User)(nil),                    // 0: nortoo.usms.user.v1.User
+	(*CreateReq)(nil),               // 1: nortoo.usms.user.v1.CreateReq
+	(*DeleteReq)(nil),               // 2: nortoo.usms.user.v1.DeleteReq
+	(*UpdateReq)(nil),               // 3: nortoo.usms.user.v1.UpdateReq
+	(*GetReq)(nil),                  // 4: nortoo.usms.user.v1.GetReq
+	(*ListReq)(nil),                 // 5: nortoo.usms.user.v1.ListReq
+	(*ListResp)(nil),                // 6: nortoo.usms.user.v1.ListResp
+	(*SignupReq)(nil),               // 7: nortoo.usms.user.v1.SignupReq
+	(*LoginReq)(nil),                // 8: nortoo.usms.user.v1.LoginReq
+	(*LoginResp)(nil),               // 9: nortoo.usms.user.v1.LoginResp
+	(*AuthReq)(nil),                 // 10: nortoo.usms.user.v1.AuthReq
+	(*AuthResp)(nil),                // 11: nortoo.usms.user.v1.AuthResp
+	(*DoesIdentifierExistReq)(nil),  // 12: nortoo.usms.user.v1.DoesIdentifierExistReq
+	(*DoesIdentifierExistResp)(nil), // 13: nortoo.usms.user.v1.DoesIdentifierExistResp
+	(*ChangePasswordReq)(nil),       // 14: nortoo.usms.user.v1.ChangePasswordReq
+	(*ResetPasswordReq)(nil),        // 15: nortoo.usms.user.v1.ResetPasswordReq
+	(*v1.Role)(nil),                 // 16: nortoo.usms.role.v1.Role
+	(*v11.Group)(nil),               // 17: nortoo.usms.usergroup.v1.Group
+	(*types.TimeModel)(nil),         // 18: nortoo.usms.common.v1.types.TimeModel
+	(*types.Pagination)(nil),        // 19: nortoo.usms.common.v1.types.Pagination
+	(*types.PaginationResp)(nil),    // 20: nortoo.usms.common.v1.types.PaginationResp
 }
 var file_pkg_proto_user_v1_message_proto_depIdxs = []int32{
-	20, // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
-	21, // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
-	22, // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
-	23, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
-	24, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
-	1,  // 5: nortoo.usms.user.v1.ListResp.items:type_name -> nortoo.usms.user.v1.User
-	1,  // 6: nortoo.usms.user.v1.LoginResp.user:type_name -> nortoo.usms.user.v1.User
-	0,  // 7: nortoo.usms.user.v1.VerificationMethod.verification_method:type_name -> nortoo.usms.user.v1.EnumVerification
-	17, // 8: nortoo.usms.user.v1.ListVerificationMethodsResp.available_verification_methods:type_name -> nortoo.usms.user.v1.VerificationMethod
-	0,  // 9: nortoo.usms.user.v1.ResetPasswordReq.verification_method:type_name -> nortoo.usms.user.v1.EnumVerification
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	16, // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
+	17, // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
+	18, // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
+	19, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
+	20, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
+	0,  // 5: nortoo.usms.user.v1.ListResp.items:type_name -> nortoo.usms.user.v1.User
+	0,  // 6: nortoo.usms.user.v1.LoginResp.user:type_name -> nortoo.usms.user.v1.User
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_user_v1_message_proto_init() }
@@ -1477,14 +1255,13 @@ func file_pkg_proto_user_v1_message_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_user_v1_message_proto_rawDesc), len(file_pkg_proto_user_v1_message_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   19,
+			NumEnums:      0,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_pkg_proto_user_v1_message_proto_goTypes,
 		DependencyIndexes: file_pkg_proto_user_v1_message_proto_depIdxs,
-		EnumInfos:         file_pkg_proto_user_v1_message_proto_enumTypes,
 		MessageInfos:      file_pkg_proto_user_v1_message_proto_msgTypes,
 	}.Build()
 	File_pkg_proto_user_v1_message_proto = out.File

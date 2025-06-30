@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "pkg/proto/verification/v1/message.proto";
+
+package nortoo.usms.verification.v1;
+
+option go_package = "github.com/nortoo/usms/pkg/proto/verification/v1;v1";
+
+service Service {
+  // ListVerificationMethods lists the supported verification approaches.
+  rpc ListVerificationMethods(ListVerificationMethodsReq) returns (ListVerificationMethodsResp);
+
+  // GetVerificationTarget queries the email address or mobile number of a user through the identifier.
+  rpc GetVerificationTarget(GetVerificationTargetReq) returns (GetVerificationTargetResp);
+}
+
