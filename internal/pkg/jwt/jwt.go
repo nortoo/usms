@@ -13,7 +13,7 @@ type Claims struct {
 }
 
 // GenerateToken generates a new JWT token for access and refresh token.
-func GenerateToken(userID uint, secret string, expiryIn int) (string, error) {
+func GenerateToken(tokenId, secret string, userID uint, expiryIn int64) (string, error) {
 	expirationTime := time.Now().Add(time.Duration(expiryIn) * time.Second) // Access token valid for 15 minutes
 
 	claims := &Claims{
@@ -22,6 +22,7 @@ func GenerateToken(userID uint, secret string, expiryIn int) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Subject:   fmt.Sprintf("%d", userID),
+			ID:        tokenId,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

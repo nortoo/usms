@@ -100,3 +100,16 @@ func (s *Service) DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifie
 	}
 	return DoesIdentifierExist(ctx, req)
 }
+
+func (s *Service) ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
+	if req.GetUid() <= 0 {
+		return nil, errors.ErrInvalidParams.WithDetail("uid is required.")
+	}
+	if req.GetOldPassword() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("old password is required.")
+	}
+	if req.GetNewPassword() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("new password is required.")
+	}
+	return ChangePassword(ctx, req)
+}

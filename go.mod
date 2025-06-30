@@ -10,6 +10,7 @@ require (
 	github.com/nortoo/utils-go v0.0.0-20250622162149-b177be0cbb90
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.11.0
+	github.com/satori/go.uuid v1.2.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.39.0
 	google.golang.org/grpc v1.72.2

@@ -34,10 +34,10 @@ type (
 		// JWT defines the JWT configuration.
 		JWT struct {
 			// TokenExpireTime defines the expiration time of a token in seconds.
-			TokenExpireTime int `yaml:"token_expire_time"`
+			TokenExpireTime int64 `yaml:"token_expire_time"`
 
 			// TokenRefreshTime defines the refresh time of a token in seconds.
-			TokenRefreshTime int `yaml:"token_refresh_time"`
+			TokenRefreshTime int64 `yaml:"token_refresh_time"`
 		} `yaml:"jwt"`
 
 		// DefaultValue defines the default values for some configurations.

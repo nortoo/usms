@@ -3,19 +3,25 @@ package user
 import (
 	"context"
 
+	"time"
+
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/etc"
 	"github.com/nortoo/usms/internal/pkg/jwt"
 	"github.com/nortoo/usms/internal/pkg/log"
+	"github.com/nortoo/usms/internal/pkg/session"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
+	"github.com/nortoo/usms/internal/pkg/store"
 	"github.com/nortoo/usms/internal/pkg/types/user"
 	_usm "github.com/nortoo/usms/internal/pkg/usm"
+	"github.com/nortoo/usms/internal/pkg/utils"
 	_validation "github.com/nortoo/usms/internal/pkg/validation"
 	"github.com/nortoo/usms/pkg/errors"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/user/v1"
 	"github.com/nortoo/utils-go/validation"
+	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -66,7 +72,8 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
 		}
 	}
-	password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
+
+	password, err := utils.EncryptPassword(req.GetPassword())
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
@@ -74,7 +81,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 	u := &model.User{
 		Model:    gorm.Model{ID: uint(snowflake.GetSnowWorker().NextId())},
 		Username: req.GetUsername(),
-		Password: string(password),
+		Password: password,
 		Email:    req.GetEmail(),
 		Mobile:   req.GetMobile(),
 		State:    int8(req.GetState()),
@@ -156,11 +163,11 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 			return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 		}
 
-		password, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
+		password, err := utils.EncryptPassword(req.GetPassword())
 		if err != nil {
 			return nil, errors.ErrInternalError.WithDetail(err.Error())
 		}
-		u.Password = string(password)
+		u.Password = password
 		cols = append(cols, "Password")
 	}
 	if req.GetState() != 0 {
@@ -322,21 +329,33 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
-	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.GetPassword())); err != nil {
+	if !utils.ComparePassword(u.Password, req.GetPassword()) {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
 
-	token, err := jwt.GenerateToken(u.ID, etc.GetEnv().JWTSecretKey, etc.GetConfig().App.Settings.JWT.TokenExpireTime)
+	tokenId := uuid.NewV4().String()
+	token, err := jwt.GenerateToken(tokenId, etc.GetEnv().JWTSecretKey, u.ID, etc.GetConfig().App.Settings.JWT.TokenExpireTime)
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
 
 	refreshToken, err := jwt.GenerateToken(
-		u.ID,
+		tokenId,
 		etc.GetEnv().JWTRefreshSecretKey,
+		u.ID,
 		etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+
+	expiresAt := time.Now().Add(time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime) * time.Second).Unix()
+	sessionStoreKey := session.GenerateSessionStoreKey(u.ID, tokenId)
+	if err = store.GetRedisClient().Set(
+		ctx,
+		sessionStoreKey,
+		expiresAt,
+		time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime)*time.Second).Err(); err != nil {
+		log.GetLogger().Warn("failed to store session.", zap.String("key", sessionStoreKey), zap.Error(err))
 	}
 
 	return &pb.LoginResp{
@@ -350,6 +369,21 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
 	claims, err := jwt.ParseToken(token, etc.GetEnv().JWTSecretKey)
 	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
+	}
+
+	tokenId := claims.ID
+	if tokenId == "" {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
+	}
+
+	// check if the token is in the session blocklist.
+	sessionBlocklistKey := session.GenerateSessionBlocklistKey(tokenId)
+	exist, err := store.GetRedisClient().Exists(ctx, sessionBlocklistKey).Result()
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+	if exist > 0 {
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
 	}
 
@@ -420,4 +454,88 @@ func DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*
 	}
 
 	return &resp, nil
+}
+
+func revokeUserTokens(ctx context.Context, uid uint) {
+	var cursor uint64
+	var userTokenKeys []string
+
+	// Loop until the cursor returns to 0
+	for {
+		// SCAN command:
+		// - ctx: The context for the operation
+		// - cursor: The cursor returned from the previous call (0 for the first call)
+		// - match: The glob-style pattern to match keys (e.g., "user:*" to match keys starting with "user:")
+		// - count: A hint to Redis about how many elements to return per call (Redis may return more or less)
+		keys, nextCursor, err := store.GetRedisClient().Scan(ctx, cursor, session.GenerateSessionStoreKey(uid, "*"), 0).Result()
+		if err != nil {
+			log.GetLogger().Warn("redis scan fail", zap.Error(err))
+		}
+
+		// Append the retrieved keys to our list
+		userTokenKeys = append(userTokenKeys, keys...)
+
+		// Update the cursor for the next iteration
+		cursor = nextCursor
+
+		// If the cursor is 0, it means we have iterated through all keys
+		if cursor == 0 {
+			break
+		}
+	}
+
+	// add all the tokens of the user to the token blocklist.
+	for _, tokenKey := range userTokenKeys {
+		tokenId, err := session.GetTokenIdFromSessionKey(tokenKey)
+		if err != nil {
+			log.GetLogger().Warn("Failed to get tokenId from session key", zap.Error(err))
+			continue
+		}
+
+		// when get the expiresAt failed, use the default expire of the token.
+		expire := etc.GetConfig().App.Settings.JWT.TokenExpireTime
+		expiresAt, err := store.GetRedisClient().Get(ctx, tokenKey).Int64()
+		if err == nil {
+			expire = expiresAt - time.Now().Unix()
+
+			// this token is about to expiry or already expired.
+			if expire < 5 {
+				continue
+			}
+		}
+
+		sessionBlocklistKey := session.GenerateSessionBlocklistKey(tokenId)
+		err = store.GetRedisClient().Set(ctx, sessionBlocklistKey, "", time.Duration(expire)*time.Second).Err()
+		if err != nil {
+			log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
+		}
+	}
+}
+
+func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
+	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+	if err != nil {
+		return nil, err
+	}
+	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.GetOldPassword())); err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
+	}
+
+	if _, err := _validation.IsValidPassword(req.GetNewPassword()); err != nil {
+		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
+	}
+
+	password, err := utils.EncryptPassword(req.GetNewPassword())
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+	u.Password = password
+
+	err = _usm.Client().UpdateUser(u, "Password")
+	if err != nil {
+		return nil, err
+	}
+	revokeUserTokens(ctx, u.ID)
+
+	return &emptypb.Empty{}, nil
 }
