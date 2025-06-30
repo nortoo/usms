@@ -118,3 +118,12 @@ message ResetPasswordReq {
   uint64 uid = 1;
   string new_password = 2;
 }
+
+message RefreshTokenReq {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResp {
+  string token = 1;
+  string refresh_token = 2;
+}

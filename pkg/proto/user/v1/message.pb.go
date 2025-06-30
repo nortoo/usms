@@ -1097,6 +1097,102 @@ func (x *ResetPasswordReq) GetNewPassword() string {
 	return ""
 }
 
+type RefreshTokenReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenReq) Reset() {
+	*x = RefreshTokenReq{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenReq) ProtoMessage() {}
+
+func (x *RefreshTokenReq) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenReq.ProtoReflect.Descriptor instead.
+func (*RefreshTokenReq) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *RefreshTokenReq) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshTokenResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenResp) Reset() {
+	*x = RefreshTokenResp{}
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenResp) ProtoMessage() {}
+
+func (x *RefreshTokenResp) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_user_v1_message_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenResp.ProtoReflect.Descriptor instead.
+func (*RefreshTokenResp) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_user_v1_message_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *RefreshTokenResp) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *RefreshTokenResp) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_pkg_proto_user_v1_message_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
@@ -1192,7 +1288,12 @@ const file_pkg_proto_user_v1_message_proto_rawDesc = "" +
 	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"G\n" +
 	"\x10ResetPasswordReq\x12\x10\n" +
 	"\x03uid\x18\x01 \x01(\x04R\x03uid\x12!\n" +
-	"\fnew_password\x18\x02 \x01(\tR\vnewPasswordB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
+	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\"6\n" +
+	"\x0fRefreshTokenReq\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"M\n" +
+	"\x10RefreshTokenResp\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshTokenB-Z+github.com/nortoo/usms/pkg/proto/user/v1;v1b\x06proto3"
 
 var (
 	file_pkg_proto_user_v1_message_proto_rawDescOnce sync.Once
@@ -1206,7 +1307,7 @@ func file_pkg_proto_user_v1_message_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_user_v1_message_proto_rawDescData
 }
 
-var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_pkg_proto_user_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_pkg_proto_user_v1_message_proto_goTypes = []any{
 	(*User)(nil),                    // 0: nortoo.usms.user.v1.User
 	(*CreateReq)(nil),               // 1: nortoo.usms.user.v1.CreateReq
@@ -1224,18 +1325,20 @@ var file_pkg_proto_user_v1_message_proto_goTypes = []any{
 	(*DoesIdentifierExistResp)(nil), // 13: nortoo.usms.user.v1.DoesIdentifierExistResp
 	(*ChangePasswordReq)(nil),       // 14: nortoo.usms.user.v1.ChangePasswordReq
 	(*ResetPasswordReq)(nil),        // 15: nortoo.usms.user.v1.ResetPasswordReq
-	(*v1.Role)(nil),                 // 16: nortoo.usms.role.v1.Role
-	(*v11.Group)(nil),               // 17: nortoo.usms.usergroup.v1.Group
-	(*types.TimeModel)(nil),         // 18: nortoo.usms.common.v1.types.TimeModel
-	(*types.Pagination)(nil),        // 19: nortoo.usms.common.v1.types.Pagination
-	(*types.PaginationResp)(nil),    // 20: nortoo.usms.common.v1.types.PaginationResp
+	(*RefreshTokenReq)(nil),         // 16: nortoo.usms.user.v1.RefreshTokenReq
+	(*RefreshTokenResp)(nil),        // 17: nortoo.usms.user.v1.RefreshTokenResp
+	(*v1.Role)(nil),                 // 18: nortoo.usms.role.v1.Role
+	(*v11.Group)(nil),               // 19: nortoo.usms.usergroup.v1.Group
+	(*types.TimeModel)(nil),         // 20: nortoo.usms.common.v1.types.TimeModel
+	(*types.Pagination)(nil),        // 21: nortoo.usms.common.v1.types.Pagination
+	(*types.PaginationResp)(nil),    // 22: nortoo.usms.common.v1.types.PaginationResp
 }
 var file_pkg_proto_user_v1_message_proto_depIdxs = []int32{
-	16, // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
-	17, // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
-	18, // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
-	19, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
-	20, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
+	18, // 0: nortoo.usms.user.v1.User.roles:type_name -> nortoo.usms.role.v1.Role
+	19, // 1: nortoo.usms.user.v1.User.groups:type_name -> nortoo.usms.usergroup.v1.Group
+	20, // 2: nortoo.usms.user.v1.User.time:type_name -> nortoo.usms.common.v1.types.TimeModel
+	21, // 3: nortoo.usms.user.v1.ListReq.pagination:type_name -> nortoo.usms.common.v1.types.Pagination
+	22, // 4: nortoo.usms.user.v1.ListResp.pagination:type_name -> nortoo.usms.common.v1.types.PaginationResp
 	0,  // 5: nortoo.usms.user.v1.ListResp.items:type_name -> nortoo.usms.user.v1.User
 	0,  // 6: nortoo.usms.user.v1.LoginResp.user:type_name -> nortoo.usms.user.v1.User
 	7,  // [7:7] is the sub-list for method output_type
@@ -1256,7 +1359,7 @@ func file_pkg_proto_user_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_user_v1_message_proto_rawDesc), len(file_pkg_proto_user_v1_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

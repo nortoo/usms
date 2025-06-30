@@ -22,7 +22,6 @@ import (
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/user/v1"
 	"github.com/nortoo/utils-go/validation"
-	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -329,34 +328,14 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
 
-	tokenId := uuid.NewV4().String()
-	token, err := jwt.GenerateToken(tokenId, etc.GetEnv().JWTSecretKey, u.ID, etc.GetConfig().App.Settings.JWT.TokenExpireTime)
+	accessToken, refreshToken, err := jwt.IssueAccessTokenAndRefreshToken(u.ID)
 	if err != nil {
-		return nil, errors.ErrInternalError.WithDetail(err.Error())
-	}
-
-	refreshToken, err := jwt.GenerateToken(
-		tokenId,
-		etc.GetEnv().JWTRefreshSecretKey,
-		u.ID,
-		etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
-	if err != nil {
-		return nil, errors.ErrInternalError.WithDetail(err.Error())
-	}
-
-	expiresAt := time.Now().Add(time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime) * time.Second).Unix()
-	sessionStoreKey := session.GenerateSessionStoreKey(u.ID, tokenId)
-	if err = store.GetRedisClient().Set(
-		ctx,
-		sessionStoreKey,
-		expiresAt,
-		time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime)*time.Second).Err(); err != nil {
-		log.GetLogger().Warn("failed to store session.", zap.String("key", sessionStoreKey), zap.Error(err))
+		return nil, err
 	}
 
 	return &pb.LoginResp{
 		User:         user.ModelToPb(u),
-		Token:        token,
+		Token:        accessToken,
 		RefreshToken: refreshToken,
 		TokenType:    "Bearer",
 	}, nil
@@ -375,7 +354,7 @@ func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
 
 	// check if the token is in the session blocklist.
 	sessionBlocklistKey := session.GenerateSessionBlocklistKey(tokenId)
-	exist, err := store.GetRedisClient().Exists(ctx, sessionBlocklistKey).Result()
+	exist, err := store.GetRedisClient().GetRDB().Exists(ctx, sessionBlocklistKey).Result()
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
@@ -452,62 +431,6 @@ func DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*
 	return &resp, nil
 }
 
-func revokeUserTokens(ctx context.Context, uid uint) {
-	var cursor uint64
-	var userTokenKeys []string
-
-	// Loop until the cursor returns to 0
-	for {
-		// SCAN command:
-		// - ctx: The context for the operation
-		// - cursor: The cursor returned from the previous call (0 for the first call)
-		// - match: The glob-style pattern to match keys (e.g., "user:*" to match keys starting with "user:")
-		// - count: A hint to Redis about how many elements to return per call (Redis may return more or less)
-		keys, nextCursor, err := store.GetRedisClient().Scan(ctx, cursor, session.GenerateSessionStoreKey(uid, "*"), 0).Result()
-		if err != nil {
-			log.GetLogger().Warn("redis scan fail", zap.Error(err))
-		}
-
-		// Append the retrieved keys to our list
-		userTokenKeys = append(userTokenKeys, keys...)
-
-		// Update the cursor for the next iteration
-		cursor = nextCursor
-
-		// If the cursor is 0, it means we have iterated through all keys
-		if cursor == 0 {
-			break
-		}
-	}
-
-	// add all the tokens of the user to the token blocklist.
-	for _, tokenKey := range userTokenKeys {
-		tokenId, err := session.GetTokenIdFromSessionKey(tokenKey)
-		if err != nil {
-			log.GetLogger().Warn("Failed to get tokenId from session key", zap.Error(err))
-			continue
-		}
-
-		// when get the expiresAt failed, use the default expire of the token.
-		expire := etc.GetConfig().App.Settings.JWT.TokenExpireTime
-		expiresAt, err := store.GetRedisClient().Get(ctx, tokenKey).Int64()
-		if err == nil {
-			expire = expiresAt - time.Now().Unix()
-
-			// this token is about to expiry or already expired.
-			if expire < 5 {
-				continue
-			}
-		}
-
-		sessionBlocklistKey := session.GenerateSessionBlocklistKey(tokenId)
-		err = store.GetRedisClient().Set(ctx, sessionBlocklistKey, "", time.Duration(expire)*time.Second).Err()
-		if err != nil {
-			log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
-		}
-	}
-}
-
 func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
 	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
 	if err != nil {
@@ -531,7 +454,7 @@ func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Em
 	if err != nil {
 		return nil, err
 	}
-	revokeUserTokens(ctx, u.ID)
+	session.RevokeUserTokens(ctx, u.ID)
 
 	return &emptypb.Empty{}, nil
 }
@@ -556,7 +479,58 @@ func ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empt
 	if err != nil {
 		return nil, err
 	}
-	revokeUserTokens(ctx, u.ID)
+	session.RevokeUserTokens(ctx, u.ID)
 
 	return &emptypb.Empty{}, nil
+}
+
+func RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshTokenResp, error) {
+	claims, err := jwt.ParseToken(req.GetRefreshToken(), etc.GetEnv().JWTRefreshSecretKey)
+	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token.")
+	}
+
+	tokenId := claims.ID
+	if tokenId == "" {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
+	}
+
+	refreshTokenBlocklistKey := session.GenerateSessionRefreshTokenBlocklistStoreKey(tokenId)
+	exist, err := store.GetRedisClient().GetRDB().Exists(ctx, refreshTokenBlocklistKey).Result()
+	if err != nil {
+		return nil, errors.ErrInternalError.WithDetail(err.Error())
+	}
+	if exist > 0 {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
+	}
+
+	userID := claims.UID
+	if userID <= 0 {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid user ID in token")
+	}
+
+	accessToken, refreshToken, err := jwt.IssueAccessTokenAndRefreshToken(uint(userID))
+	if err != nil {
+		return nil, errors.ErrUnauthenticated.WithDetail("invalid token.")
+	}
+
+	// revoke the refresh token once it is used.
+	// when get the expiresAt failed, use the default expire of the token.
+	refreshTokenStoreKey := session.GenerateSessionRefreshTokenStoreKey(uint(userID), tokenId)
+	expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
+	ttl, err := store.GetRedisClient().GetRDB().TTL(ctx, refreshTokenStoreKey).Result()
+	if err == nil && ttl > 5 {
+		// when ttl is less than or equal 5, we consider that this token is about to expire.
+		expire = ttl
+	}
+
+	err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire*time.Second).Err()
+	if err != nil {
+		log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
+	}
+
+	return &pb.RefreshTokenResp{
+		Token:        accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }

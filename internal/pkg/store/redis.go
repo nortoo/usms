@@ -11,8 +11,12 @@ import (
 
 var rdb *redis.Client
 
-func GetRedisClient() *redis.Client {
-	return rdb
+type RedisCli struct {
+	rdb *redis.Client
+}
+
+func GetRedisClient() *RedisCli {
+	return &RedisCli{rdb: rdb}
 }
 
 // InitRedis creates a new Redis client.
@@ -28,4 +32,31 @@ func InitRedis(config *etc.Store) error {
 
 	_, err := rdb.Ping(ctx).Result()
 	return err
+}
+
+func (c *RedisCli) GetRDB() *redis.Client {
+	return c.rdb
+}
+
+func (c *RedisCli) ListKeys(ctx context.Context, key string) (keys []string, err error) {
+	var cursor uint64
+
+	// Loop until the cursor returns to 0
+	for {
+		results, nextCursor, err := c.GetRDB().Scan(ctx, cursor, key, 0).Result()
+		if err != nil {
+			return nil, err
+		}
+
+		// Append the retrieved keys to our list
+		keys = append(keys, results...)
+
+		// Update the cursor for the next iteration
+		cursor = nextCursor
+
+		// If the cursor is 0, it means we have iterated through all keys
+		if cursor == 0 {
+			return keys, nil
+		}
+	}
 }

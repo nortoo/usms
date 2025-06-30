@@ -30,6 +30,7 @@ const (
 	Service_Auth_FullMethodName                = "/nortoo.usms.user.v1.Service/Auth"
 	Service_ChangePassword_FullMethodName      = "/nortoo.usms.user.v1.Service/ChangePassword"
 	Service_ResetPassword_FullMethodName       = "/nortoo.usms.user.v1.Service/ResetPassword"
+	Service_RefreshToken_FullMethodName        = "/nortoo.usms.user.v1.Service/RefreshToken"
 	Service_DoesIdentifierExist_FullMethodName = "/nortoo.usms.user.v1.Service/DoesIdentifierExist"
 )
 
@@ -49,6 +50,7 @@ type ServiceClient interface {
 	Auth(ctx context.Context, in *AuthReq, opts ...grpc.CallOption) (*AuthResp, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ResetPassword(ctx context.Context, in *ResetPasswordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenReq, opts ...grpc.CallOption) (*RefreshTokenResp, error)
 	DoesIdentifierExist(ctx context.Context, in *DoesIdentifierExistReq, opts ...grpc.CallOption) (*DoesIdentifierExistResp, error)
 }
 
@@ -160,6 +162,16 @@ func (c *serviceClient) ResetPassword(ctx context.Context, in *ResetPasswordReq,
 	return out, nil
 }
 
+func (c *serviceClient) RefreshToken(ctx context.Context, in *RefreshTokenReq, opts ...grpc.CallOption) (*RefreshTokenResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefreshTokenResp)
+	err := c.cc.Invoke(ctx, Service_RefreshToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *serviceClient) DoesIdentifierExist(ctx context.Context, in *DoesIdentifierExistReq, opts ...grpc.CallOption) (*DoesIdentifierExistResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DoesIdentifierExistResp)
@@ -186,6 +198,7 @@ type ServiceServer interface {
 	Auth(context.Context, *AuthReq) (*AuthResp, error)
 	ChangePassword(context.Context, *ChangePasswordReq) (*emptypb.Empty, error)
 	ResetPassword(context.Context, *ResetPasswordReq) (*emptypb.Empty, error)
+	RefreshToken(context.Context, *RefreshTokenReq) (*RefreshTokenResp, error)
 	DoesIdentifierExist(context.Context, *DoesIdentifierExistReq) (*DoesIdentifierExistResp, error)
 	mustEmbedUnimplementedServiceServer()
 }
@@ -226,6 +239,9 @@ func (UnimplementedServiceServer) ChangePassword(context.Context, *ChangePasswor
 }
 func (UnimplementedServiceServer) ResetPassword(context.Context, *ResetPasswordReq) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResetPassword not implemented")
+}
+func (UnimplementedServiceServer) RefreshToken(context.Context, *RefreshTokenReq) (*RefreshTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
 }
 func (UnimplementedServiceServer) DoesIdentifierExist(context.Context, *DoesIdentifierExistReq) (*DoesIdentifierExistResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DoesIdentifierExist not implemented")
@@ -431,6 +447,24 @@ func _Service_ResetPassword_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).RefreshToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_RefreshToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).RefreshToken(ctx, req.(*RefreshTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Service_DoesIdentifierExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DoesIdentifierExistReq)
 	if err := dec(in); err != nil {
@@ -495,6 +529,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResetPassword",
 			Handler:    _Service_ResetPassword_Handler,
+		},
+		{
+			MethodName: "RefreshToken",
+			Handler:    _Service_RefreshToken_Handler,
 		},
 		{
 			MethodName: "DoesIdentifierExist",

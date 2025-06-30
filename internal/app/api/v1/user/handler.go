@@ -124,3 +124,11 @@ func (s *Service) ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (
 
 	return ResetPassword(ctx, req)
 }
+
+func (s *Service) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshTokenResp, error) {
+	if req.GetRefreshToken() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("refresh token is required.")
+	}
+
+	return RefreshToken(ctx, req)
+}
