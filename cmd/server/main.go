@@ -45,6 +45,10 @@ func main() {
 		log.GetLogger().Fatal("Failed to init mysql", zap.Error(err))
 		os.Exit(1)
 	}
+	if err = store.InitRedis(etc.GetConfig().Store); err != nil {
+		log.GetLogger().Fatal("Failed to init redis", zap.Error(err))
+		os.Exit(1)
+	}
 	if err = usm.Init(
 		store.GetStore(store.Default),
 		store.GetStore(store.Default),

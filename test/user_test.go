@@ -241,4 +241,24 @@ func TestUser(t *testing.T) {
 	if len(users.GetItems()) != userCount {
 		t.Fatalf("Failed to list users, expected %d users, got %d", userCount, len(users.GetItems()))
 	}
+
+	newPassword := "NewPassword123.."
+	for _, u := range users.GetItems() {
+		_, err = client.ResetPassword(ctx, &pb.ResetPasswordReq{
+			Uid:         u.GetId(),
+			NewPassword: newPassword,
+		})
+		if err != nil {
+			t.Fatalf("Failed to reset password: %v", err)
+		}
+
+		_, err = client.Login(ctx, &pb.LoginReq{
+			Identifier: u.GetUsername(),
+			Password:   newPassword,
+		})
+		if err != nil {
+			t.Fatalf("Failed to login: %v", err)
+		}
+	}
+
 }
