@@ -517,14 +517,14 @@ func RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshToke
 	// revoke the refresh token once it is used.
 	// when get the expiresAt failed, use the default expire of the token.
 	refreshTokenStoreKey := session.GenerateSessionRefreshTokenStoreKey(uint(userID), tokenId)
-	expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
+	expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime) * time.Second
 	ttl, err := store.GetRedisClient().GetRDB().TTL(ctx, refreshTokenStoreKey).Result()
 	if err == nil && ttl > 5 {
 		// when ttl is less than or equal 5, we consider that this token is about to expire.
 		expire = ttl
 	}
 
-	err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire*time.Second).Err()
+	err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire).Err()
 	if err != nil {
 		log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
 	}

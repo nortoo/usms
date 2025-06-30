@@ -80,7 +80,7 @@ func addSessionToBlocklist(ctx context.Context, sessionKeys []string) {
 		}
 
 		// when get the expiresAt failed, use the default expire of the token.
-		expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime)
+		expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenExpireTime) * time.Second
 		ttl, err := store.GetRedisClient().GetRDB().TTL(ctx, tokenKey).Result()
 		if err == nil {
 			// when ttl is less than or equal 5, we consider that this token is about to expire.
@@ -91,7 +91,7 @@ func addSessionToBlocklist(ctx context.Context, sessionKeys []string) {
 		}
 
 		sessionBlocklistKey := GenerateSessionBlocklistKey(tokenId)
-		err = store.GetRedisClient().GetRDB().Set(ctx, sessionBlocklistKey, "", expire*time.Second).Err()
+		err = store.GetRedisClient().GetRDB().Set(ctx, sessionBlocklistKey, "", expire).Err()
 		if err != nil {
 			log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
 		}
@@ -108,7 +108,7 @@ func addRefreshTokenToBlocklist(ctx context.Context, refreshTokenKeys []string) 
 		}
 
 		// when get the expiresAt failed, use the default expire of the token.
-		expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime)
+		expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime) * time.Second
 		ttl, err := store.GetRedisClient().GetRDB().TTL(ctx, refreshTokenKey).Result()
 		if err == nil {
 			// when ttl is less than or equal 5, we consider that this token is about to expire.
@@ -119,7 +119,7 @@ func addRefreshTokenToBlocklist(ctx context.Context, refreshTokenKeys []string) 
 		}
 
 		refreshTokenBlocklistKey := GenerateSessionRefreshTokenBlocklistStoreKey(tokenId)
-		err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", time.Duration(expire)*time.Second).Err()
+		err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire).Err()
 		if err != nil {
 			log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
 		}
