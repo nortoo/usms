@@ -3,18 +3,34 @@ package menu
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	"github.com/nortoo/usms/pkg/errors"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/menu/v1"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.Menu, error) {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.Menu, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.Menu, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+}
+
+type service struct {
+	usmCli *usm.Client
+}
+
+func NewService(usmCli *usm.Client) Service {
+	return &service{usmCli: usmCli}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.Menu, error) {
 	if req.GetParentId() != 0 {
-		_, err := _usm.Client().GetMenu(&model.Menu{ID: uint(req.GetParentId())})
+		_, err := s.usmCli.GetMenu(&model.Menu{ID: uint(req.GetParentId())})
 		if err != nil {
 			return nil, errors.ErrResourceNotFound.WithDetail("parent menu does not exist")
 		}
@@ -26,7 +42,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Menu, error) {
 		Path:     req.GetPath(),
 		Comment:  req.GetComment(),
 	}
-	err := _usm.Client().CreateMenu(m)
+	err := s.usmCli.CreateMenu(m)
 	if err != nil {
 		return nil, err
 	}
@@ -44,11 +60,11 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Menu, error) {
 	}, nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return _usm.Client().DeleteMenu(&model.Menu{ID: uint(req.GetId())})
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
+	return s.usmCli.DeleteMenu(&model.Menu{ID: uint(req.GetId())})
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, error) {
 	m := &model.Menu{ID: uint(req.GetId())}
 
 	var cols []string
@@ -65,10 +81,10 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, error) {
 		cols = append(cols, "Comment")
 	}
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
-	err := _usm.Client().UpdateMenu(m)
+	err := s.usmCli.UpdateMenu(m)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +102,9 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, error) {
 	}, nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.Menu, error) {
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Menu, error) {
 	m := &model.Menu{ID: uint(req.GetId())}
-	m, err := _usm.Client().GetMenu(m)
+	m, err := s.usmCli.GetMenu(m)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +122,8 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.Menu, error) {
 	}, nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-	ret, total, err := _usm.Client().ListMenus(&types.QueryMenuOptions{Pagination: &types.Pagination{
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+	ret, total, err := s.usmCli.ListMenus(&types.QueryMenuOptions{Pagination: &types.Pagination{
 		Page:     int(req.GetPagination().GetPage()),
 		PageSize: int(req.GetPagination().GetPageSize()),
 	}})

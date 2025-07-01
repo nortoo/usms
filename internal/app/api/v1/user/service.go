@@ -5,16 +5,15 @@ import (
 
 	"time"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/etc"
 	"github.com/nortoo/usms/internal/pkg/jwt"
-	"github.com/nortoo/usms/internal/pkg/log"
 	"github.com/nortoo/usms/internal/pkg/session"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
 	"github.com/nortoo/usms/internal/pkg/store"
 	"github.com/nortoo/usms/internal/pkg/types/user"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	"github.com/nortoo/usms/internal/pkg/utils/encryption"
 	"github.com/nortoo/usms/internal/pkg/utils/identification"
 	_validation "github.com/nortoo/usms/internal/pkg/validation"
@@ -28,11 +27,56 @@ import (
 	"gorm.io/gorm"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
-	if _, err := _validation.IsValidUsername(req.GetUsername()); err != nil {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.User, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+
+	Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error)
+	Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error)
+	Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error)
+	ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error)
+	ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error)
+	RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshTokenResp, error)
+
+	DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*pb.DoesIdentifierExistResp, error)
+
+	getUserFromToken(ctx context.Context, token string) (*model.User, error)
+}
+
+type service struct {
+	config            *etc.Config
+	env               *etc.Env
+	jwt               jwt.Service
+	session           session.Service
+	usmCli            *usm.Client
+	redisCli          *store.RedisCli
+	validator         _validation.Service
+	identificationSvc identification.Service
+	logger            *zap.Logger
+}
+
+func NewService(config *etc.Config, env *etc.Env, usmCli *usm.Client, jwt jwt.Service, session session.Service, redisCli *store.RedisCli, validator _validation.Service, logger *zap.Logger) Service {
+	return &service{
+		config:            config,
+		env:               env,
+		session:           session,
+		jwt:               jwt,
+		usmCli:            usmCli,
+		redisCli:          redisCli,
+		validator:         validator,
+		identificationSvc: identification.New(validator),
+		logger:            logger,
+	}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
+	if _, err := s.validator.IsValidUsername(req.GetUsername()); err != nil {
 		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
-	if _, err := _validation.IsValidPassword(req.GetPassword()); err != nil {
+	if _, err := s.validator.IsValidPassword(req.GetPassword()); err != nil {
 		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
 	if req.GetEmail() != "" {
@@ -47,7 +91,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 		}
 	}
 
-	usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
+	usernameExists, err := s.usmCli.DoesUsernameExist(req.GetUsername())
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +99,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 		return nil, errors.ErrUserExists.WithDetail("username already exists")
 	}
 	if req.GetEmail() != "" {
-		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
+		emailExists, err := s.usmCli.DoesEmailExist(req.GetEmail())
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +108,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 		}
 	}
 	if req.GetMobile() != "" {
-		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
+		mobileExists, err := s.usmCli.DoesMobileExist(req.GetMobile())
 		if err != nil {
 			return nil, err
 		}
@@ -87,27 +131,27 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 		State:    int8(req.GetState()),
 	}
 	if u.State == 0 {
-		u.State = etc.GetConfig().App.Settings.DefaultValue.UserState
+		u.State = s.config.App.Settings.DefaultValue.UserState
 	}
 
 	var roles []*model.Role
 	if len(req.GetRoles()) != 0 {
 		for _, rid := range req.GetRoles() {
-			role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
+			role, err := s.usmCli.GetRole(&model.Role{ID: uint(rid)})
 			if err != nil {
-				log.GetLogger().Warn("tole doesn't exist", zap.Int64("id", rid))
+				s.logger.Warn("tole doesn't exist", zap.Int64("id", rid))
 				continue
 			}
 			roles = append(roles, role)
 		}
 	} else {
 		// assign default roles if no roles are provided.
-		roles, _, err = _usm.Client().ListRoles(&types.QueryRoleOptions{
+		roles, _, err = s.usmCli.ListRoles(&types.QueryRoleOptions{
 			IsDefault: []bool{true},
 			WithTotal: false,
 		})
 		if err != nil {
-			log.GetLogger().Warn("default role doesn't exist", zap.Error(err))
+			s.logger.Warn("default role doesn't exist", zap.Error(err))
 		}
 	}
 	u.Roles = roles
@@ -115,26 +159,26 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 	var groups []*model.Group
 	if len(req.GetGroups()) != 0 {
 		for _, gid := range req.GetGroups() {
-			group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
+			group, err := s.usmCli.GetGroup(&model.Group{ID: uint(gid)})
 			if err != nil {
-				log.GetLogger().Warn("group doesn't exist", zap.Int64("id", gid))
+				s.logger.Warn("group doesn't exist", zap.Int64("id", gid))
 				continue
 			}
 			groups = append(groups, group)
 		}
 	} else {
 		// assign default groups if no groups are provided.
-		groups, _, err = _usm.Client().ListGroups(&types.QueryGroupOptions{
+		groups, _, err = s.usmCli.ListGroups(&types.QueryGroupOptions{
 			IsDefault: []bool{true},
 			WithTotal: false,
 		})
 		if err != nil {
-			log.GetLogger().Warn("default group doesn't exist", zap.Error(err))
+			s.logger.Warn("default group doesn't exist", zap.Error(err))
 		}
 	}
 	u.Groups = groups
 
-	err = _usm.Client().CreateUser(u)
+	err = s.usmCli.CreateUser(u)
 	if err != nil {
 		return nil, err
 	}
@@ -142,11 +186,11 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.User, error) {
 	return user.ModelToPb(u), nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return _usm.Client().DeleteUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
+	return s.usmCli.DeleteUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 	u := &model.User{Model: gorm.Model{ID: uint(req.GetId())}}
 
 	var cols []string
@@ -159,7 +203,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 		cols = append(cols, "Email")
 	}
 	if req.GetPassword() != "" {
-		if _, err := _validation.IsValidPassword(req.GetPassword()); err != nil {
+		if _, err := s.validator.IsValidPassword(req.GetPassword()); err != nil {
 			return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 		}
 
@@ -177,7 +221,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 
 	var roles []*model.Role
 	for _, rid := range req.GetRoles() {
-		role, err := _usm.Client().GetRole(&model.Role{ID: uint(rid)})
+		role, err := s.usmCli.GetRole(&model.Role{ID: uint(rid)})
 		if err != nil {
 			continue
 		}
@@ -190,7 +234,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 
 	var groups []*model.Group
 	for _, gid := range req.GetGroups() {
-		group, err := _usm.Client().GetGroup(&model.Group{ID: uint(gid)})
+		group, err := s.usmCli.GetGroup(&model.Group{ID: uint(gid)})
 		if err != nil {
 			continue
 		}
@@ -202,11 +246,11 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 	}
 
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
 	if u.Email != "" {
-		emailExists, err := _usm.Client().DoesEmailExist(u.Email)
+		emailExists, err := s.usmCli.DoesEmailExist(u.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -215,7 +259,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 		}
 	}
 	if u.Mobile != "" {
-		mobileExists, err := _usm.Client().DoesMobileExist(u.Mobile)
+		mobileExists, err := s.usmCli.DoesMobileExist(u.Mobile)
 		if err != nil {
 			return nil, err
 		}
@@ -223,7 +267,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 			return nil, errors.ErrUserExists.WithDetail("mobile already exists")
 		}
 	}
-	err := _usm.Client().UpdateUser(u, cols...)
+	err := s.usmCli.UpdateUser(u, cols...)
 	if err != nil {
 		return nil, err
 	}
@@ -231,21 +275,21 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
 	return user.ModelToPb(u), nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
 	var u *model.User
 	var err error
 
 	if req.GetId() != 0 {
-		u, err = _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+		u, err = s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
 	} else {
 		identifier := req.GetIdentifier()
-		switch identification.Recognize(identifier) {
+		switch s.identificationSvc.Recognize(identifier) {
 		case identification.Email:
-			u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+			u, err = s.usmCli.GetUser(&model.User{Email: identifier})
 		case identification.Mobile:
-			u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+			u, err = s.usmCli.GetUser(&model.User{Mobile: identifier})
 		case identification.Username:
-			u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+			u, err = s.usmCli.GetUser(&model.User{Username: identifier})
 		default:
 			return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
 		}
@@ -257,7 +301,7 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
 	return user.ModelToPb(u), nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
 	options := &types.QueryUserOptions{
 		Pagination: &types.Pagination{
 			Page:     int(req.GetPagination().GetPage()),
@@ -272,7 +316,7 @@ func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
 	for _, state := range req.GetState() {
 		options.States = append(options.States, int8(state))
 	}
-	ret, total, err := _usm.Client().ListUsers(options)
+	ret, total, err := s.usmCli.ListUsers(options)
 	if err != nil {
 		return nil, err
 	}
@@ -291,13 +335,13 @@ func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
 	}, nil
 }
 
-func Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
-	_, err := Create(ctx, &pb.CreateReq{
+func (s *service) Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
+	_, err := s.Create(ctx, &pb.CreateReq{
 		Username: req.GetUsername(),
 		Password: req.GetPassword(),
 		Email:    req.GetEmail(),
 		Mobile:   req.GetMobile(),
-		State:    int32(etc.GetConfig().App.Settings.DefaultValue.UserState),
+		State:    int32(s.config.App.Settings.DefaultValue.UserState),
 	})
 	if err != nil {
 		return nil, err
@@ -306,18 +350,18 @@ func Signup(ctx context.Context, req *pb.SignupReq) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
 }
 
-func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
+func (s *service) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	var u *model.User
 	var err error
 
 	identifier := req.GetIdentifier()
-	switch identification.Recognize(identifier) {
+	switch s.identificationSvc.Recognize(identifier) {
 	case identification.Email:
-		u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Email: identifier})
 	case identification.Mobile:
-		u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Mobile: identifier})
 	case identification.Username:
-		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Username: identifier})
 	default:
 		return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
 	}
@@ -328,7 +372,7 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
 
-	accessToken, refreshToken, err := jwt.IssueAccessTokenAndRefreshToken(u.ID)
+	accessToken, refreshToken, err := s.jwt.IssueAccessTokenAndRefreshToken(u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -341,8 +385,8 @@ func Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	}, nil
 }
 
-func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
-	claims, err := jwt.ParseToken(token, etc.GetEnv().JWTSecretKey)
+func (s *service) getUserFromToken(ctx context.Context, token string) (*model.User, error) {
+	claims, err := s.jwt.ParseToken(token, s.env.JWTSecretKey)
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
 	}
@@ -353,8 +397,8 @@ func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
 	}
 
 	// check if the token is in the session blocklist.
-	sessionBlocklistKey := session.GenerateSessionBlocklistKey(tokenId)
-	exist, err := store.GetRedisClient().GetRDB().Exists(ctx, sessionBlocklistKey).Result()
+	sessionBlocklistKey := s.session.GenerateSessionBlocklistKey(tokenId)
+	exist, err := s.redisCli.GetRDB().Exists(ctx, sessionBlocklistKey).Result()
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
@@ -367,7 +411,7 @@ func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid user ID in token")
 	}
 
-	u, err := _usm.Client().GetUser(&model.User{
+	u, err := s.usmCli.GetUser(&model.User{
 		Model: gorm.Model{ID: uint(userID)},
 		Roles: []*model.Role{},
 	})
@@ -378,8 +422,8 @@ func getUserFromToken(ctx context.Context, token string) (*model.User, error) {
 	return u, nil
 }
 
-func Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
-	u, err := getUserFromToken(ctx, req.GetToken())
+func (s *service) Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
+	u, err := s.getUserFromToken(ctx, req.GetToken())
 	if err != nil {
 		return nil, err
 	}
@@ -388,9 +432,9 @@ func Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
 	}
 
 	for _, role := range u.Roles {
-		authorized, err := _usm.Client().Authorize(role.Name, req.GetTenant(), req.GetResource(), req.GetAction())
+		authorized, err := s.usmCli.Authorize(role.Name, req.GetTenant(), req.GetResource(), req.GetAction())
 		if err != nil {
-			log.GetLogger().Warn("authorize fail", zap.Error(err))
+			s.logger.Warn("authorize fail", zap.Error(err))
 			continue
 		}
 		if authorized {
@@ -403,25 +447,25 @@ func Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, error) {
 	return &pb.AuthResp{Authorized: false}, nil
 }
 
-func DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*pb.DoesIdentifierExistResp, error) {
+func (s *service) DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*pb.DoesIdentifierExistResp, error) {
 	var resp pb.DoesIdentifierExistResp
 
 	if req.GetEmail() != "" {
-		emailExists, err := _usm.Client().DoesEmailExist(req.GetEmail())
+		emailExists, err := s.usmCli.DoesEmailExist(req.GetEmail())
 		if err != nil {
 			return nil, err
 		}
 		resp.EmailExist = emailExists
 	}
 	if req.GetMobile() != "" {
-		mobileExists, err := _usm.Client().DoesMobileExist(req.GetMobile())
+		mobileExists, err := s.usmCli.DoesMobileExist(req.GetMobile())
 		if err != nil {
 			return nil, err
 		}
 		resp.MobileExist = mobileExists
 	}
 	if req.GetUsername() != "" {
-		usernameExists, err := _usm.Client().DoesUsernameExist(req.GetUsername())
+		usernameExists, err := s.usmCli.DoesUsernameExist(req.GetUsername())
 		if err != nil {
 			return nil, err
 		}
@@ -431,8 +475,8 @@ func DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*
 	return &resp, nil
 }
 
-func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
-	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+func (s *service) ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
+	u, err := s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +484,7 @@ func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Em
 		return nil, errors.ErrUnauthenticated.WithDetail("username or password is incorrect")
 	}
 
-	if _, err := _validation.IsValidPassword(req.GetNewPassword()); err != nil {
+	if _, err := s.validator.IsValidPassword(req.GetNewPassword()); err != nil {
 		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
 
@@ -450,22 +494,22 @@ func ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Em
 	}
 	u.Password = password
 
-	err = _usm.Client().UpdateUser(u, "Password")
+	err = s.usmCli.UpdateUser(u, "Password")
 	if err != nil {
 		return nil, err
 	}
-	session.RevokeUserTokens(ctx, u.ID)
+	s.session.RevokeUserTokens(ctx, u.ID)
 
 	return &emptypb.Empty{}, nil
 }
 
-func ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error) {
-	u, err := _usm.Client().GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+func (s *service) ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error) {
+	u, err := s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := _validation.IsValidPassword(req.GetNewPassword()); err != nil {
+	if _, err := s.validator.IsValidPassword(req.GetNewPassword()); err != nil {
 		return nil, errors.ErrInvalidParams.WithDetail(err.Error())
 	}
 
@@ -475,17 +519,17 @@ func ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empt
 	}
 	u.Password = password
 
-	err = _usm.Client().UpdateUser(u, "Password")
+	err = s.usmCli.UpdateUser(u, "Password")
 	if err != nil {
 		return nil, err
 	}
-	session.RevokeUserTokens(ctx, u.ID)
+	s.session.RevokeUserTokens(ctx, u.ID)
 
 	return &emptypb.Empty{}, nil
 }
 
-func RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshTokenResp, error) {
-	claims, err := jwt.ParseToken(req.GetRefreshToken(), etc.GetEnv().JWTRefreshSecretKey)
+func (s *service) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshTokenResp, error) {
+	claims, err := s.jwt.ParseToken(req.GetRefreshToken(), s.env.JWTRefreshSecretKey)
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid token.")
 	}
@@ -495,8 +539,8 @@ func RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshToke
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid token")
 	}
 
-	refreshTokenBlocklistKey := session.GenerateSessionRefreshTokenBlocklistStoreKey(tokenId)
-	exist, err := store.GetRedisClient().GetRDB().Exists(ctx, refreshTokenBlocklistKey).Result()
+	refreshTokenBlocklistKey := s.session.GenerateSessionRefreshTokenBlocklistStoreKey(tokenId)
+	exist, err := s.redisCli.GetRDB().Exists(ctx, refreshTokenBlocklistKey).Result()
 	if err != nil {
 		return nil, errors.ErrInternalError.WithDetail(err.Error())
 	}
@@ -509,24 +553,24 @@ func RefreshToken(ctx context.Context, req *pb.RefreshTokenReq) (*pb.RefreshToke
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid user ID in token")
 	}
 
-	accessToken, refreshToken, err := jwt.IssueAccessTokenAndRefreshToken(uint(userID))
+	accessToken, refreshToken, err := s.jwt.IssueAccessTokenAndRefreshToken(uint(userID))
 	if err != nil {
 		return nil, errors.ErrUnauthenticated.WithDetail("invalid token.")
 	}
 
 	// revoke the refresh token once it is used.
 	// when get the expiresAt failed, use the default expire of the token.
-	refreshTokenStoreKey := session.GenerateSessionRefreshTokenStoreKey(uint(userID), tokenId)
-	expire := time.Duration(etc.GetConfig().App.Settings.JWT.TokenRefreshTime) * time.Second
-	ttl, err := store.GetRedisClient().GetRDB().TTL(ctx, refreshTokenStoreKey).Result()
+	refreshTokenStoreKey := s.session.GenerateSessionRefreshTokenStoreKey(uint(userID), tokenId)
+	expire := time.Duration(s.config.App.Settings.JWT.TokenRefreshTime) * time.Second
+	ttl, err := s.redisCli.GetRDB().TTL(ctx, refreshTokenStoreKey).Result()
 	if err == nil && ttl > 5 {
 		// when ttl is less than or equal 5, we consider that this token is about to expire.
 		expire = ttl
 	}
 
-	err = store.GetRedisClient().GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire).Err()
+	err = s.redisCli.GetRDB().Set(ctx, refreshTokenBlocklistKey, "", expire).Err()
 	if err != nil {
-		log.GetLogger().Warn("Failed to add tokenId to blocklist", zap.Error(err))
+		s.logger.Warn("Failed to add tokenId to blocklist", zap.Error(err))
 	}
 
 	return &pb.RefreshTokenResp{

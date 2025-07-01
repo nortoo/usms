@@ -10,22 +10,29 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Service struct {
+type Handler struct {
 	pb.UnimplementedServiceServer
+	service Service
 }
 
-func Register(grpcServer *grpc.Server) {
-	pb.RegisterServiceServer(grpcServer, &Service{})
+func NewHandler(service Service) *Handler {
+	return &Handler{
+		service: service,
+	}
 }
 
-func (s *Service) ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethodsReq) (*pb.ListVerificationMethodsResp, error) {
+func Register(grpcServer *grpc.Server, handler *Handler) {
+	pb.RegisterServiceServer(grpcServer, handler)
+}
+
+func (h *Handler) ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethodsReq) (*pb.ListVerificationMethodsResp, error) {
 	if req.GetIdentifier() == "" {
 		return nil, status.Error(codes.InvalidArgument, "identifier is required")
 	}
-	return ListVerificationMethods(ctx, req)
+	return h.service.ListVerificationMethods(ctx, req)
 }
 
-func (s *Service) GetVerificationTarget(ctx context.Context, req *pb.GetVerificationTargetReq) (*pb.GetVerificationTargetResp, error) {
+func (h *Handler) GetVerificationTarget(ctx context.Context, req *pb.GetVerificationTargetReq) (*pb.GetVerificationTargetResp, error) {
 	if req.GetIdentifier() == "" {
 		return nil, errors.ErrInvalidParams.WithDetail("identifier is required")
 	}
@@ -33,5 +40,5 @@ func (s *Service) GetVerificationTarget(ctx context.Context, req *pb.GetVerifica
 		return nil, errors.ErrInvalidParams.WithDetail("verification method is required")
 	}
 
-	return GetVerificationTarget(ctx, req)
+	return h.service.GetVerificationTarget(ctx, req)
 }

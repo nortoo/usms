@@ -15,12 +15,12 @@ type RedisCli struct {
 	rdb *redis.Client
 }
 
-func GetRedisClient() *RedisCli {
-	return &RedisCli{rdb: rdb}
-}
+//func GetRedisClient() *RedisCli {
+//	return &RedisCli{rdb: rdb}
+//}
 
-// InitRedis creates a new Redis client.
-func InitRedis(config *etc.Store) error {
+// NewRedisCli creates a new Redis client.
+func NewRedisCli(config *etc.Store) (*RedisCli, error) {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
 		Password: config.Redis.Password, // no password set
@@ -31,7 +31,11 @@ func InitRedis(config *etc.Store) error {
 	defer cancel()
 
 	_, err := rdb.Ping(ctx).Result()
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return &RedisCli{rdb: rdb}, nil
 }
 
 func (c *RedisCli) GetRDB() *redis.Client {

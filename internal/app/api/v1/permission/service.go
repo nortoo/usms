@@ -3,22 +3,38 @@ package permission
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/permission/v1"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.Permission, error) {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.Permission, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+}
+
+type service struct {
+	usmCli *usm.Client
+}
+
+func NewService(usmCli *usm.Client) Service {
+	return &service{usmCli: usmCli}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.Permission, error) {
 	p := &model.Permission{
 		ID:       uint(snowflake.GetSnowWorker().NextId()),
 		Action:   req.GetAction(),
 		Resource: req.GetResource(),
 		Comment:  req.GetComment(),
 	}
-	err := _usm.Client().CreatePermission(p)
+	err := s.usmCli.CreatePermission(p)
 	if err != nil {
 		return nil, err
 	}
@@ -35,11 +51,11 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Permission, error) {
 	}, nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return _usm.Client().DeletePermission(&model.Permission{ID: uint(req.GetId())})
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
+	return s.usmCli.DeletePermission(&model.Permission{ID: uint(req.GetId())})
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission, error) {
 	p := &model.Permission{ID: uint(req.GetId())}
 
 	var cols []string
@@ -48,10 +64,10 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission, error) {
 		cols = append(cols, "Comment")
 	}
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
-	err := _usm.Client().UpdatePermission(p)
+	err := s.usmCli.UpdatePermission(p)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +84,8 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission, error) {
 	}, nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
-	p, err := _usm.Client().GetPermission(&model.Permission{ID: uint(req.GetId())})
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
+	p, err := s.usmCli.GetPermission(&model.Permission{ID: uint(req.GetId())})
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +102,8 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
 	}, nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-	ret, total, err := _usm.Client().ListPermissions(&types.QueryPermissionOptions{Pagination: &types.Pagination{
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+	ret, total, err := s.usmCli.ListPermissions(&types.QueryPermissionOptions{Pagination: &types.Pagination{
 		Page:     int(req.GetPagination().GetPage()),
 		PageSize: int(req.GetPagination().GetPageSize()),
 	}})

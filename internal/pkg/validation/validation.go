@@ -8,12 +8,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-func IsValidUsername(username string) (bool, error) {
-	minLength := etc.GetConfig().App.Settings.Validation.UsernamePattern.MinLength
+type Service interface {
+	IsValidUsername(username string) (bool, error)
+	IsValidPassword(password string) (bool, error)
+}
+
+type service struct {
+	config *etc.Config
+}
+
+func New(conf *etc.Config) Service {
+	return &service{
+		config: conf,
+	}
+}
+
+func (s *service) IsValidUsername(username string) (bool, error) {
+	minLength := s.config.App.Settings.Validation.UsernamePattern.MinLength
 	if minLength <= 0 {
 		minLength = 5
 	}
-	maxLength := etc.GetConfig().App.Settings.Validation.UsernamePattern.MaxLength
+	maxLength := s.config.App.Settings.Validation.UsernamePattern.MaxLength
 	if maxLength <= 0 {
 		maxLength = 20
 	}
@@ -25,8 +40,8 @@ func IsValidUsername(username string) (bool, error) {
 	return true, nil
 }
 
-func IsValidPassword(password string) (bool, error) {
-	minLength := etc.GetConfig().App.Settings.Validation.PasswordPattern.MinLength
+func (s *service) IsValidPassword(password string) (bool, error) {
+	minLength := s.config.App.Settings.Validation.PasswordPattern.MinLength
 	if minLength <= 0 {
 		minLength = 8
 	}
@@ -36,28 +51,28 @@ func IsValidPassword(password string) (bool, error) {
 		return false, errors.Errorf("password must be at least %d characters", minLength)
 	}
 
-	if etc.GetConfig().App.Settings.Validation.PasswordPattern.RequireLowerCase {
+	if s.config.App.Settings.Validation.PasswordPattern.RequireLowerCase {
 		lower := regexp.MustCompile(`[a-z]`)
 		if !lower.MatchString(password) {
 			return false, errors.New("password must contain at least one lowercase character")
 		}
 	}
 
-	if etc.GetConfig().App.Settings.Validation.PasswordPattern.RequireUpperCase {
+	if s.config.App.Settings.Validation.PasswordPattern.RequireUpperCase {
 		upper := regexp.MustCompile(`[A-Z]`)
 		if !upper.MatchString(password) {
 			return false, errors.New("password must contain at least one uppercase character")
 		}
 	}
 
-	if etc.GetConfig().App.Settings.Validation.PasswordPattern.RequireDigit {
+	if s.config.App.Settings.Validation.PasswordPattern.RequireDigit {
 		digit := regexp.MustCompile(`[0-9]`)
 		if !digit.MatchString(password) {
 			return false, errors.New("password must contain at least one digit character")
 		}
 	}
 
-	if etc.GetConfig().App.Settings.Validation.PasswordPattern.RequireSpecialChars {
+	if s.config.App.Settings.Validation.PasswordPattern.RequireSpecialChars {
 		special := regexp.MustCompile(`[` + "`" + `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~` + "`" + `]`)
 		if !special.MatchString(password) {
 			return false, errors.New("password must contain at least one special character")

@@ -3,16 +3,32 @@ package application
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	pb "github.com/nortoo/usms/pkg/proto/application/v1"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	"github.com/nortoo/utils-go/char"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error) {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.Application, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.Application, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+}
+
+type service struct {
+	usmCli *usm.Client
+}
+
+func NewService(usmCli *usm.Client) Service {
+	return &service{usmCli: usmCli}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error) {
 	// Todo: verify if the application name already exists
 	app := &model.Application{
 		ID:        uint(snowflake.GetSnowWorker().NextId()),
@@ -22,7 +38,7 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error) {
 		Comment:   req.GetComment(),
 		State:     0,
 	}
-	err := _usm.Client().CreateApplication(app)
+	err := s.usmCli.CreateApplication(app)
 	if err != nil {
 		return nil, err
 	}
@@ -41,11 +57,11 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Application, error) {
 	}, nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return _usm.Client().DeleteApplication(&model.Application{ID: uint(req.GetId())})
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
+	return s.usmCli.DeleteApplication(&model.Application{ID: uint(req.GetId())})
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Application, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Application, error) {
 	app := &model.Application{ID: uint(req.GetId())}
 
 	var cols []string
@@ -58,10 +74,10 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Application, error) {
 		cols = append(cols, "State")
 	}
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
-	err := _usm.Client().UpdateApplication(app, cols...)
+	err := s.usmCli.UpdateApplication(app, cols...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,13 +96,13 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Application, error) {
 	}, nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.Application, error) {
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Application, error) {
 	app := &model.Application{
 		ID:    uint(req.GetId()),
 		Name:  req.GetName(),
 		APPID: req.GetAppid(),
 	}
-	app, err := _usm.Client().GetApplication(app)
+	app, err := s.usmCli.GetApplication(app)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +121,8 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.Application, error) {
 	}, nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-	ret, total, err := _usm.Client().ListApplications(&types.QueryApplicationOptions{Pagination: &types.Pagination{
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+	ret, total, err := s.usmCli.ListApplications(&types.QueryApplicationOptions{Pagination: &types.Pagination{
 		Page:     int(req.GetPagination().Page),
 		PageSize: int(req.GetPagination().GetPageSize()),
 	}})

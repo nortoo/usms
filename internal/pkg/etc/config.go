@@ -75,16 +75,17 @@ type (
 	}
 )
 
-var conf Config
+func Load(file string) (*Config, error) {
+	var conf Config
 
-func GetConfig() Config {
-	return conf
-}
-
-func Load(file string) error {
 	bs, err := os.ReadFile(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return yaml.Unmarshal(bs, &conf)
+	err = yaml.Unmarshal(bs, &conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &conf, nil
 }

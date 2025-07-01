@@ -11,12 +11,12 @@ type Env struct {
 	JWTRefreshSecretKey string `env:"JWT_REFRESH_SECRET_KEY,notEmpty"`
 }
 
-var envCfg Env
+func LoadEnv() (*Env, error) {
+	var envCfg Env
+	err := env.Parse(&envCfg)
+	if err != nil {
+		return nil, err
+	}
 
-func GetEnv() *Env {
-	return &envCfg
-}
-
-func LoadEnv() error {
-	return env.Parse(&envCfg)
+	return &envCfg, nil
 }

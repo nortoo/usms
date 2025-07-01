@@ -9,11 +9,16 @@ import (
 	"go.uber.org/zap"
 )
 
+var s Service
+
 func TestMain(m *testing.M) {
-	if err := etc.Load("testdata/app.yml"); err != nil {
+	cfg, err := etc.Load("testdata/app.yml")
+	if err != nil {
 		fmt.Println("Failed to load config file", zap.Error(err))
 		os.Exit(1)
 	}
+	s = New(cfg)
+
 	m.Run()
 }
 
@@ -66,7 +71,7 @@ func TestIsValidUsername(t *testing.T) {
 	}
 
 	for username, expected := range samples {
-		allowed, _ := IsValidUsername(username)
+		allowed, _ := s.IsValidUsername(username)
 		if allowed != expected {
 			t.Errorf("Username: %s, Expected: %v, Got: %v", username, expected, allowed)
 		}
@@ -134,7 +139,7 @@ func TestIsValidPassword(t *testing.T) {
 	}
 
 	for password, expected := range samples {
-		allowed, _ := IsValidPassword(password)
+		allowed, _ := s.IsValidPassword(password)
 		if allowed != expected {
 			t.Errorf("Password: %s, Expected: %v, Got: %v", password, expected, allowed)
 		}

@@ -14,12 +14,26 @@ const (
 	Mobile   Identifier = "mobile"
 )
 
-func Recognize(identifier string) Identifier {
+type Service interface {
+	Recognize(identifier string) Identifier
+}
+
+type service struct {
+	validator _validation.Service
+}
+
+func New(validator _validation.Service) Service {
+	return &service{
+		validator: validator,
+	}
+}
+
+func (s *service) Recognize(identifier string) Identifier {
 	if validation.IsValidEmail(identifier) {
 		return Email
 	} else if isValid, _ := validation.IsValidMobileNumber(identifier, "US"); isValid {
 		return Mobile
-	} else if _, err := _validation.IsValidUsername(identifier); err == nil {
+	} else if _, err := s.validator.IsValidUsername(identifier); err == nil {
 		return Username
 	} else {
 		return "unknown"

@@ -3,44 +3,60 @@ package role
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
 	"github.com/nortoo/usms/internal/pkg/types/role"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/role/v1"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.Role, error) {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.Role, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+}
+
+type service struct {
+	usmCli *usm.Client
+}
+
+func NewService(usmCli *usm.Client) Service {
+	return &service{usmCli: usmCli}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.Role, error) {
 	r := &model.Role{
 		ID:      uint(snowflake.GetSnowWorker().NextId()),
 		Name:    req.GetName(),
 		Comment: req.GetComment(),
 	}
 	if req.ApplicationId != 0 {
-		app, err := _usm.Client().GetApplication(&model.Application{ID: uint(req.GetApplicationId())})
+		app, err := s.usmCli.GetApplication(&model.Application{ID: uint(req.GetApplicationId())})
 		if err != nil {
 			return nil, err
 		}
 		r.Application = app
 	}
 	for _, mid := range req.GetMenus() {
-		m, err := _usm.Client().GetMenu(&model.Menu{ID: uint(mid)})
+		m, err := s.usmCli.GetMenu(&model.Menu{ID: uint(mid)})
 		if err != nil {
 			continue
 		}
 		r.Menus = append(r.Menus, m)
 	}
 	for _, pid := range req.GetPermissions() {
-		p, err := _usm.Client().GetPermission(&model.Permission{ID: uint(pid)})
+		p, err := s.usmCli.GetPermission(&model.Permission{ID: uint(pid)})
 		if err != nil {
 			continue
 		}
 		r.Permissions = append(r.Permissions, p)
 	}
 
-	err := _usm.Client().CreateRole(r)
+	err := s.usmCli.CreateRole(r)
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +64,11 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Role, error) {
 	return role.ModelToPb(r), nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return _usm.Client().DeleteRole(&model.Role{ID: uint(req.GetId())})
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
+	return s.usmCli.DeleteRole(&model.Role{ID: uint(req.GetId())})
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
 	r := &model.Role{ID: uint(req.GetId())}
 
 	var cols []string
@@ -63,7 +79,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
 
 	var menus []*model.Menu
 	for _, mid := range req.GetMenus() {
-		m, err := _usm.Client().GetMenu(&model.Menu{ID: uint(mid)})
+		m, err := s.usmCli.GetMenu(&model.Menu{ID: uint(mid)})
 		if err != nil {
 			continue
 		}
@@ -76,7 +92,7 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
 
 	var permissions []*model.Permission
 	for _, pid := range req.GetPermissions() {
-		p, err := _usm.Client().GetPermission(&model.Permission{ID: uint(pid)})
+		p, err := s.usmCli.GetPermission(&model.Permission{ID: uint(pid)})
 		if err != nil {
 			continue
 		}
@@ -88,10 +104,10 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
 	}
 
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
-	err := _usm.Client().UpdateRole(r)
+	err := s.usmCli.UpdateRole(r)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +115,8 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, error) {
 	return role.ModelToPb(r), nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error) {
-	r, err := _usm.Client().GetRole(&model.Role{ID: uint(req.GetId())})
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error) {
+	r, err := s.usmCli.GetRole(&model.Role{ID: uint(req.GetId())})
 	if err != nil {
 		return nil, err
 	}
@@ -108,8 +124,8 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error) {
 	return role.ModelToPb(r), nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-	ret, total, err := _usm.Client().ListRoles(&types.QueryRoleOptions{Pagination: &types.Pagination{
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+	ret, total, err := s.usmCli.ListRoles(&types.QueryRoleOptions{Pagination: &types.Pagination{
 		Page:     int(req.GetPagination().GetPage()),
 		PageSize: int(req.GetPagination().GetPageSize()),
 	}})

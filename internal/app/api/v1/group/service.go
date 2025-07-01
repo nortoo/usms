@@ -3,21 +3,37 @@ package group
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
 	"github.com/nortoo/usm/types"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	pbtypes "github.com/nortoo/usms/pkg/proto/common/v1/types"
 	pb "github.com/nortoo/usms/pkg/proto/usergroup/v1"
 )
 
-func Create(ctx context.Context, req *pb.CreateReq) (*pb.Group, error) {
+type Service interface {
+	Create(ctx context.Context, req *pb.CreateReq) (*pb.Group, error)
+	Delete(ctx context.Context, req *pb.DeleteReq) error
+	Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, error)
+	Get(ctx context.Context, req *pb.GetReq) (*pb.Group, error)
+	List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error)
+}
+
+type service struct {
+	usmCli *usm.Client
+}
+
+func NewService(usmCli *usm.Client) Service {
+	return &service{usmCli: usmCli}
+}
+
+func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.Group, error) {
 	g := &model.Group{
 		ID:      uint(snowflake.GetSnowWorker().NextId()),
 		Name:    req.GetName(),
 		Comment: req.GetComment(),
 	}
-	err := _usm.Client().CreateGroup(g)
+	err := s.usmCli.CreateGroup(g)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +49,12 @@ func Create(ctx context.Context, req *pb.CreateReq) (*pb.Group, error) {
 	}, nil
 }
 
-func Delete(ctx context.Context, req *pb.DeleteReq) error {
+func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
 	group := &model.Group{ID: uint(req.GetId())}
-	return _usm.Client().DeleteGroup(group)
+	return s.usmCli.DeleteGroup(group)
 }
 
-func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, error) {
+func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, error) {
 	g := &model.Group{ID: uint(req.GetId())}
 
 	var cols []string
@@ -51,10 +67,10 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, error) {
 		cols = append(cols, "Comment")
 	}
 	if len(cols) == 0 {
-		return Get(ctx, &pb.GetReq{Id: req.GetId()})
+		return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 	}
 
-	err := _usm.Client().UpdateGroup(g)
+	err := s.usmCli.UpdateGroup(g)
 	if err != nil {
 		return nil, err
 	}
@@ -70,12 +86,12 @@ func Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, error) {
 	}, nil
 }
 
-func Get(ctx context.Context, req *pb.GetReq) (*pb.Group, error) {
+func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Group, error) {
 	g := &model.Group{
 		ID:   uint(req.GetId()),
 		Name: req.GetName(),
 	}
-	g, err := _usm.Client().GetGroup(g)
+	g, err := s.usmCli.GetGroup(g)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +107,8 @@ func Get(ctx context.Context, req *pb.GetReq) (*pb.Group, error) {
 	}, nil
 }
 
-func List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-	ret, total, err := _usm.Client().ListGroups(&types.QueryGroupOptions{Pagination: &types.Pagination{
+func (s *service) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
+	ret, total, err := s.usmCli.ListGroups(&types.QueryGroupOptions{Pagination: &types.Pagination{
 		Page:     int(req.GetPagination().GetPage()),
 		PageSize: int(req.GetPagination().GetPageSize()),
 	}})

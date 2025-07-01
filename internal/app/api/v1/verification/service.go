@@ -3,28 +3,45 @@ package verification
 import (
 	"context"
 
+	"github.com/nortoo/usm"
 	"github.com/nortoo/usm/model"
-	_usm "github.com/nortoo/usms/internal/pkg/usm"
 	"github.com/nortoo/usms/internal/pkg/utils/encryption"
 	"github.com/nortoo/usms/internal/pkg/utils/identification"
 	"github.com/nortoo/usms/pkg/errors"
 	pb "github.com/nortoo/usms/pkg/proto/verification/v1"
 )
 
+type Service interface {
+	ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethodsReq) (*pb.ListVerificationMethodsResp, error)
+	GetVerificationTarget(ctx context.Context, req *pb.GetVerificationTargetReq) (*pb.GetVerificationTargetResp, error)
+}
+
+type service struct {
+	usmCli            *usm.Client
+	identificationSvc identification.Service
+}
+
+func NewService(usmCli *usm.Client, identificationSvc identification.Service) Service {
+	return &service{
+		usmCli:            usmCli,
+		identificationSvc: identificationSvc,
+	}
+}
+
 // ListVerificationMethods lists the available verification methods through a user's identifier.
 // The `identifier` could be either username, email, or mobile.
-func ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethodsReq) (*pb.ListVerificationMethodsResp, error) {
+func (s *service) ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethodsReq) (*pb.ListVerificationMethodsResp, error) {
 	var u *model.User
 	var err error
 
 	identifier := req.GetIdentifier()
-	switch identification.Recognize(identifier) {
+	switch s.identificationSvc.Recognize(identifier) {
 	case identification.Email:
-		u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Email: identifier})
 	case identification.Mobile:
-		u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Mobile: identifier})
 	case identification.Username:
-		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Username: identifier})
 	default:
 		return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
 	}
@@ -49,18 +66,18 @@ func ListVerificationMethods(ctx context.Context, req *pb.ListVerificationMethod
 	return &pb.ListVerificationMethodsResp{AvailableVerificationMethods: availableVerificationMethods}, nil
 }
 
-func GetVerificationTarget(ctx context.Context, req *pb.GetVerificationTargetReq) (*pb.GetVerificationTargetResp, error) {
+func (s *service) GetVerificationTarget(ctx context.Context, req *pb.GetVerificationTargetReq) (*pb.GetVerificationTargetResp, error) {
 	var u *model.User
 	var err error
 
 	identifier := req.GetIdentifier()
-	switch identification.Recognize(identifier) {
+	switch s.identificationSvc.Recognize(identifier) {
 	case identification.Email:
-		u, err = _usm.Client().GetUser(&model.User{Email: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Email: identifier})
 	case identification.Mobile:
-		u, err = _usm.Client().GetUser(&model.User{Mobile: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Mobile: identifier})
 	case identification.Username:
-		u, err = _usm.Client().GetUser(&model.User{Username: identifier})
+		u, err = s.usmCli.GetUser(&model.User{Username: identifier})
 	default:
 		return nil, errors.ErrInvalidParams.WithDetail("invalid identifier")
 	}
