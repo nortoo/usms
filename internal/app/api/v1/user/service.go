@@ -58,7 +58,10 @@ type service struct {
 	logger            *zap.Logger
 }
 
-func NewService(config *etc.Config, env *etc.Env, usmCli *usm.Client, jwt jwt.Service, session session.Service, redisCli *store.RedisCli, validator _validation.Service, logger *zap.Logger) Service {
+func NewService(
+	config *etc.Config, env *etc.Env, usmCli *usm.Client, jwt jwt.Service,
+	session session.Service, redisCli *store.RedisCli, validator _validation.Service,
+	logger *zap.Logger) Service {
 	return &service{
 		config:            config,
 		env:               env,
