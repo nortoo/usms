@@ -53,6 +53,7 @@ type (
 		Settings    *Settings `yaml:"settings"`
 	}
 	MySQL struct {
+		Debug    bool   `yaml:"debug"`
 		Host     string `yaml:"host"`
 		Port     int    `yaml:"port"`
 		User     string `yaml:"user"`

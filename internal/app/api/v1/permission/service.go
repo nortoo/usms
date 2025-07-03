@@ -85,7 +85,11 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
-	p, err := s.usmCli.GetPermission(&model.Permission{ID: uint(req.GetId())})
+	p, err := s.usmCli.GetPermission(&model.Permission{
+		ID:       uint(req.GetId()),
+		Resource: req.GetResource(),
+		Action:   req.GetAction(),
+	})
 	if err != nil {
 		return nil, err
 	}

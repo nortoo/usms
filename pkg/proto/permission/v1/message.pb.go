@@ -257,6 +257,8 @@ func (x *UpdateReq) GetComment() string {
 type GetReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Resource      string                 `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
+	Action        string                 `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -296,6 +298,20 @@ func (x *GetReq) GetId() uint64 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *GetReq) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *GetReq) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
 }
 
 type ListReq struct {
@@ -414,9 +430,11 @@ const file_pkg_proto_permission_v1_message_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\"5\n" +
 	"\tUpdateReq\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x18\n" +
-	"\acomment\x18\x02 \x01(\tR\acomment\"\x18\n" +
+	"\acomment\x18\x02 \x01(\tR\acomment\"L\n" +
 	"\x06GetReq\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\"R\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
+	"\bresource\x18\x02 \x01(\tR\bresource\x12\x16\n" +
+	"\x06action\x18\x03 \x01(\tR\x06action\"R\n" +
 	"\aListReq\x12G\n" +
 	"\n" +
 	"pagination\x18\x01 \x01(\v2'.nortoo.usms.common.v1.types.PaginationR\n" +

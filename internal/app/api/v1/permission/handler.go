@@ -50,9 +50,12 @@ func (h *Handler) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission
 }
 
 func (h *Handler) Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
-	if req.GetId() <= 0 {
-		return nil, errors.ErrInvalidParams.WithDetail("id is required.")
+	if req.GetId() <= 0 &&
+		req.GetResource() == "" &&
+		req.GetAction() == "" {
+		return nil, errors.ErrInvalidParams.WithDetail("either id, or resource and action is required.")
 	}
+
 	return h.service.Get(ctx, req)
 }
 

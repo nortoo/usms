@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/nortoo/usms/internal/app"
+	"github.com/nortoo/usms/internal/app/api"
 	"github.com/nortoo/usms/internal/app/api/v1/application"
 	"github.com/nortoo/usms/internal/app/api/v1/group"
 	"github.com/nortoo/usms/internal/app/api/v1/menu"
@@ -22,10 +22,10 @@ import (
 
 type Server struct {
 	grpcServer *grpc.Server
-	container  *app.Container
+	container  *api.Container
 }
 
-func NewServer(container *app.Container) (*Server, error) {
+func NewServer(container *api.Container) (*Server, error) {
 	cert, err := tls.LoadX509KeyPair(container.Config.App.Certs.CertFile, container.Config.App.Certs.KeyFile)
 	if err != nil {
 		return nil, err

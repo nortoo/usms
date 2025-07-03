@@ -116,7 +116,10 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, erro
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error) {
-	r, err := s.usmCli.GetRole(&model.Role{ID: uint(req.GetId())})
+	r, err := s.usmCli.GetRole(&model.Role{
+		ID:   uint(req.GetId()),
+		Name: req.GetName(),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,8 @@ message UpdateReq {
 
 message GetReq {
   uint64 id = 1;
+  string resource = 2;
+  string action = 3;
 }
 
 message ListReq {

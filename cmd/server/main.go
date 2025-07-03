@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/nortoo/logger"
-	"github.com/nortoo/usms/internal/app"
+	"github.com/nortoo/usms/internal/app/api"
 	"github.com/nortoo/usms/internal/pkg/etc"
 	"github.com/nortoo/usms/internal/pkg/grpc"
 	"github.com/nortoo/usms/internal/pkg/snowflake"
@@ -50,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	container, err := app.NewContainer(config, envCfg, log, "conf/casbin.conf")
+	container, err := api.NewContainer(config, envCfg, log, "conf/casbin.conf")
 	if err != nil {
 		log.Fatal("Failed to init container", zap.Error(err))
 		os.Exit(1)
