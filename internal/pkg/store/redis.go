@@ -15,10 +15,6 @@ type RedisCli struct {
 	rdb *redis.Client
 }
 
-//func GetRedisClient() *RedisCli {
-//	return &RedisCli{rdb: rdb}
-//}
-
 // NewRedisCli creates a new Redis client.
 func NewRedisCli(config *etc.Store) (*RedisCli, error) {
 	rdb = redis.NewClient(&redis.Options{

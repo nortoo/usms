@@ -5,12 +5,12 @@ go 1.24.3
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/google/uuid v1.6.0
 	github.com/nortoo/logger v0.0.0-20250603082607-bf0cc8bce6cc
-	github.com/nortoo/usm v0.0.0-20250626102359-6c62f16c67fa
+	github.com/nortoo/usm v0.0.0-20250703054546-0996901a835b
 	github.com/nortoo/utils-go v0.0.0-20250622162149-b177be0cbb90
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.11.0
-	github.com/satori/go.uuid v1.2.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.39.0
 	google.golang.org/grpc v1.72.2
@@ -34,7 +34,6 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
@@ -58,6 +57,7 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlserver v1.6.0 // indirect
 	gorm.io/plugin/dbresolver v1.6.0 // indirect
+	gorm.io/plugin/soft_delete v1.2.1 // indirect
 	modernc.org/libc v1.66.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect

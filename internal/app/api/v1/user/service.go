@@ -24,7 +24,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"gorm.io/gorm"
 )
 
 type Service interface {
@@ -126,7 +125,7 @@ func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.User, erro
 	}
 
 	u := &model.User{
-		Model:    gorm.Model{ID: uint(snowflake.GetSnowWorker().NextId())},
+		ID:       uint(snowflake.GetSnowWorker().NextId()),
 		Username: req.GetUsername(),
 		Password: password,
 		Email:    req.GetEmail(),
@@ -190,11 +189,11 @@ func (s *service) Create(ctx context.Context, req *pb.CreateReq) (*pb.User, erro
 }
 
 func (s *service) Delete(ctx context.Context, req *pb.DeleteReq) error {
-	return s.usmCli.DeleteUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+	return s.usmCli.DeleteUser(&model.User{ID: uint(req.GetId())})
 }
 
 func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.User, error) {
-	u := &model.User{Model: gorm.Model{ID: uint(req.GetId())}}
+	u := &model.User{ID: uint(req.GetId())}
 
 	var cols []string
 	if req.GetMobile() != "" {
@@ -283,7 +282,7 @@ func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.User, error) {
 	var err error
 
 	if req.GetId() != 0 {
-		u, err = s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetId())}})
+		u, err = s.usmCli.GetUser(&model.User{ID: uint(req.GetId())})
 	} else {
 		identifier := req.GetIdentifier()
 		switch s.identificationSvc.Recognize(identifier) {
@@ -415,7 +414,7 @@ func (s *service) getUserFromToken(ctx context.Context, token string) (*model.Us
 	}
 
 	u, err := s.usmCli.GetUser(&model.User{
-		Model: gorm.Model{ID: uint(userID)},
+		ID:    uint(userID),
 		Roles: []*model.Role{},
 	})
 	if err != nil {
@@ -479,7 +478,7 @@ func (s *service) DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifie
 }
 
 func (s *service) ChangePassword(ctx context.Context, req *pb.ChangePasswordReq) (*emptypb.Empty, error) {
-	u, err := s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+	u, err := s.usmCli.GetUser(&model.User{ID: uint(req.GetUid())})
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +506,7 @@ func (s *service) ChangePassword(ctx context.Context, req *pb.ChangePasswordReq)
 }
 
 func (s *service) ResetPassword(ctx context.Context, req *pb.ResetPasswordReq) (*emptypb.Empty, error) {
-	u, err := s.usmCli.GetUser(&model.User{Model: gorm.Model{ID: uint(req.GetUid())}})
+	u, err := s.usmCli.GetUser(&model.User{ID: uint(req.GetUid())})
 	if err != nil {
 		return nil, err
 	}

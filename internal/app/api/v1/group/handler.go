@@ -11,6 +11,7 @@ import (
 
 type Handler struct {
 	pb.UnimplementedServiceServer
+
 	service Service
 }
 

@@ -11,6 +11,7 @@ import (
 
 type Handler struct {
 	pb.UnimplementedServiceServer
+
 	service Service
 }
 
@@ -101,7 +102,10 @@ func (h *Handler) Auth(ctx context.Context, req *pb.AuthReq) (*pb.AuthResp, erro
 	return h.service.Auth(ctx, req)
 }
 
-func (h *Handler) DoesIdentifierExist(ctx context.Context, req *pb.DoesIdentifierExistReq) (*pb.DoesIdentifierExistResp, error) {
+func (h *Handler) DoesIdentifierExist(
+	ctx context.Context,
+	req *pb.DoesIdentifierExistReq,
+) (*pb.DoesIdentifierExistResp, error) {
 	if req.GetUsername() == "" && req.GetEmail() == "" && req.GetMobile() == "" {
 		return nil, errors.ErrInvalidParams.WithDetail("either username, email or mobile is required.")
 	}

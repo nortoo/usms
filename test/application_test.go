@@ -42,7 +42,7 @@ func TestApplication(t *testing.T) {
 		t.Fatalf("Failed to update application, expected comment 'I changed the comment.' and state 1, got comment '%s' and state %d", app.GetComment(), app.GetState())
 	}
 
-	app, err = client.Get(ctx, &pb.GetReq{Name: "Hellp"})
+	_, err = client.Get(ctx, &pb.GetReq{Name: "Hellp"})
 	if err != nil {
 		t.Fatalf("Failed to get application: %v", err)
 	}

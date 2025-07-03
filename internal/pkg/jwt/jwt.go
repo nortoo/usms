@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/nortoo/usms/internal/pkg/etc"
 	"github.com/nortoo/usms/internal/pkg/session"
 	"github.com/nortoo/usms/internal/pkg/store"
 	"github.com/nortoo/usms/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +28,13 @@ type service struct {
 	logger   *zap.Logger
 }
 
-func NewService(conf *etc.Config, env *etc.Env, session session.Service, redisCli *store.RedisCli, logger *zap.Logger) Service {
+func NewService(
+	conf *etc.Config,
+	env *etc.Env,
+	session session.Service,
+	redisCli *store.RedisCli,
+	logger *zap.Logger,
+) Service {
 	return &service{
 		config:   conf,
 		env:      env,
@@ -39,8 +45,9 @@ func NewService(conf *etc.Config, env *etc.Env, session session.Service, redisCl
 }
 
 type Claims struct {
-	UID int64 `json:"uid"`
 	jwt.RegisteredClaims
+
+	UID int64 `json:"uid"`
 }
 
 // GenerateToken generates a new JWT token for access and refresh token.
@@ -64,7 +71,7 @@ func (s *service) GenerateToken(tokenId, secret string, userID uint, expiryIn in
 	return tokenString, nil
 }
 
-// ParseToken parses and validates an jwt token
+// ParseToken parses and validates an jwt token.
 func (s *service) ParseToken(tokenString, secret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -85,7 +92,7 @@ func (s *service) ParseToken(tokenString, secret string) (*Claims, error) {
 }
 
 func (s *service) IssueAccessTokenAndRefreshToken(uid uint) (accessToken, refreshToken string, err error) {
-	tokenId := uuid.NewV4().String()
+	tokenId := uuid.New().String()
 
 	accessToken, err = s.GenerateToken(
 		tokenId,
