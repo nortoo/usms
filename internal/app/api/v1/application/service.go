@@ -82,18 +82,7 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Applicatio
 		return nil, err
 	}
 
-	return &pb.Application{
-		Id:        uint64(app.ID),
-		Name:      app.Name,
-		Appid:     app.APPID,
-		SecretKey: app.SecretKey,
-		Comment:   app.Comment,
-		State:     int32(app.State),
-		Time: &pbtypes.TimeModel{
-			CreatedAt: app.CreatedAt.Unix(),
-			UpdatedAt: app.UpdatedAt.Unix(),
-		},
-	}, nil
+	return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Application, error) {

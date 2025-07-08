@@ -75,15 +75,7 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Group, err
 		return nil, err
 	}
 
-	return &pb.Group{
-		Id:      uint64(g.ID),
-		Name:    g.Name,
-		Comment: g.Comment,
-		Time: &pbtypes.TimeModel{
-			CreatedAt: g.CreatedAt.Unix(),
-			UpdatedAt: g.UpdatedAt.Unix(),
-		},
-	}, nil
+	return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Group, error) {

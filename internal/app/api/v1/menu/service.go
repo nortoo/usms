@@ -89,17 +89,7 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Menu, erro
 		return nil, err
 	}
 
-	return &pb.Menu{
-		Id:       uint64(m.ID),
-		ParentId: uint64(m.ParentID),
-		Name:     m.Name,
-		Path:     m.Path,
-		Comment:  m.Comment,
-		Time: &pbtypes.TimeModel{
-			CreatedAt: m.CreatedAt.Unix(),
-			UpdatedAt: m.UpdatedAt.Unix(),
-		},
-	}, nil
+	return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Menu, error) {

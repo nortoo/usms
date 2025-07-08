@@ -112,7 +112,7 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Role, erro
 		return nil, err
 	}
 
-	return role.ModelToPb(r), nil
+	return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Role, error) {

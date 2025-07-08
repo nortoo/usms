@@ -72,16 +72,7 @@ func (s *service) Update(ctx context.Context, req *pb.UpdateReq) (*pb.Permission
 		return nil, err
 	}
 
-	return &pb.Permission{
-		Id:       uint64(p.ID),
-		Action:   p.Action,
-		Resource: p.Resource,
-		Comment:  p.Comment,
-		Time: &pbtypes.TimeModel{
-			CreatedAt: p.CreatedAt.Unix(),
-			UpdatedAt: p.UpdatedAt.Unix(),
-		},
-	}, nil
+	return s.Get(ctx, &pb.GetReq{Id: req.GetId()})
 }
 
 func (s *service) Get(ctx context.Context, req *pb.GetReq) (*pb.Permission, error) {
